@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,6 +58,9 @@ Options:
 Divi 5 has evolved its extension APIs. This plugin registers a classic Divi custom module when Divi exposes `ET_Builder_Module`, which Divi 5 compatibility builds can load. The shortcode remains the stable integration path and can be placed in a Divi Code or Text module.
 
 == Changelog ==
+
+= 1.0.1 =
+Fix masonry height recalculation inside the Divi 5 Visual Builder so galleries do not overlap following page content.
 
 = 1.0.0 =
 Initial release.

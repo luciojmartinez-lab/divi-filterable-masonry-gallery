@@ -3,6 +3,8 @@
 	--dfmg-tablet-columns: 2;
 	--dfmg-mobile-columns: 1;
 	--dfmg-gap: 18px;
+	clear: both;
+	display: flow-root;
 	width: 100%;
 }
 
@@ -48,7 +50,9 @@
 }
 
 .dfmg-grid {
+	clear: both;
 	margin-left: calc(var(--dfmg-gap) * -1);
+	min-height: 1px;
 	position: relative;
 }
 

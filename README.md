@@ -55,7 +55,7 @@ Divi 5 has been evolving its extension APIs. This plugin registers a classic Div
 The plugin does not require a build step. Edit the PHP, CSS, or JavaScript files directly and package the `divi-filterable-masonry-gallery` folder as a ZIP for installation.
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.0.0.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.0.1.zip -Force
 ```
 
 ## License
