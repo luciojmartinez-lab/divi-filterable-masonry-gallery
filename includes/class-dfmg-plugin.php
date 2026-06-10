@@ -1,0 +1,567 @@
+<?php
+/**
+ * Core plugin bootstrap and gallery renderer.
+ *
+ * @package DFMG
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Main plugin class.
+ */
+final class DFMG_Plugin {
+	const TAXONOMY = 'dfmg_gallery_filter';
+
+	/**
+	 * Singleton instance.
+	 *
+	 * @var DFMG_Plugin|null
+	 */
+	private static $instance = null;
+
+	/**
+	 * Returns the singleton instance.
+	 *
+	 * @return DFMG_Plugin
+	 */
+	public static function instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	/**
+	 * Constructor.
+	 */
+	private function __construct() {
+		add_action( 'init', array( $this, 'load_textdomain' ), 0 );
+		add_action( 'init', array( $this, 'register_media_taxonomy' ) );
+		add_shortcode( 'dfmg_gallery', array( $this, 'shortcode' ) );
+		add_shortcode( 'divi_masonry_gallery', array( $this, 'shortcode' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+		add_action( 'et_builder_ready', array( $this, 'register_divi_module' ) );
+	}
+
+	/**
+	 * Loads translations.
+	 *
+	 * @return void
+	 */
+	public function load_textdomain() {
+		load_plugin_textdomain(
+			'divi-filterable-masonry-gallery',
+			false,
+			dirname( plugin_basename( DFMG_PLUGIN_FILE ) ) . '/languages'
+		);
+	}
+
+	/**
+	 * Registers attachment filter terms used by galleries.
+	 *
+	 * @return void
+	 */
+	public function register_media_taxonomy() {
+		$labels = array(
+			'name'                       => __( 'Gallery Filters', 'divi-filterable-masonry-gallery' ),
+			'singular_name'              => __( 'Gallery Filter', 'divi-filterable-masonry-gallery' ),
+			'search_items'               => __( 'Search Gallery Filters', 'divi-filterable-masonry-gallery' ),
+			'popular_items'              => __( 'Popular Gallery Filters', 'divi-filterable-masonry-gallery' ),
+			'all_items'                  => __( 'All Gallery Filters', 'divi-filterable-masonry-gallery' ),
+			'edit_item'                  => __( 'Edit Gallery Filter', 'divi-filterable-masonry-gallery' ),
+			'update_item'                => __( 'Update Gallery Filter', 'divi-filterable-masonry-gallery' ),
+			'add_new_item'               => __( 'Add New Gallery Filter', 'divi-filterable-masonry-gallery' ),
+			'new_item_name'              => __( 'New Gallery Filter Name', 'divi-filterable-masonry-gallery' ),
+			'separate_items_with_commas' => __( 'Separate filters with commas', 'divi-filterable-masonry-gallery' ),
+			'add_or_remove_items'        => __( 'Add or remove filters', 'divi-filterable-masonry-gallery' ),
+			'choose_from_most_used'      => __( 'Choose from the most used filters', 'divi-filterable-masonry-gallery' ),
+			'menu_name'                  => __( 'Gallery Filters', 'divi-filterable-masonry-gallery' ),
+		);
+
+		register_taxonomy(
+			self::TAXONOMY,
+			array( 'attachment' ),
+			array(
+				'labels'                => $labels,
+				'public'                => false,
+				'show_ui'               => true,
+				'show_admin_column'     => true,
+				'show_in_quick_edit'    => true,
+				'show_in_rest'          => true,
+				'hierarchical'          => false,
+				'rewrite'               => false,
+				'update_count_callback' => '_update_generic_term_count',
+			)
+		);
+	}
+
+	/**
+	 * Registers the Divi module when Divi exposes the classic builder API.
+	 *
+	 * Divi 5 can run many legacy custom modules through its compatibility layer.
+	 * The shortcode remains available for sites where only the newer API is enabled.
+	 *
+	 * @return void
+	 */
+	public function register_divi_module() {
+		if ( ! class_exists( 'ET_Builder_Module' ) ) {
+			return;
+		}
+
+		require_once DFMG_PLUGIN_DIR . 'includes/class-dfmg-divi-module.php';
+	}
+
+	/**
+	 * Shortcode callback.
+	 *
+	 * @param array<string,mixed> $atts Shortcode attributes.
+	 * @return string
+	 */
+	public function shortcode( $atts ) {
+		$atts = shortcode_atts(
+			self::default_gallery_args(),
+			(array) $atts,
+			'dfmg_gallery'
+		);
+
+		return self::render_gallery( $atts );
+	}
+
+	/**
+	 * Enqueues frontend CSS and JS.
+	 *
+	 * Assets are intentionally loaded on the frontend globally so shortcode
+	 * usage does not enqueue styles too late for wp_head.
+	 *
+	 * @return void
+	 */
+	public function enqueue_frontend_assets() {
+		wp_enqueue_script( 'masonry' );
+		wp_enqueue_script( 'imagesloaded' );
+
+		wp_enqueue_style(
+			'dfmg-frontend',
+			DFMG_PLUGIN_URL . 'assets/frontend.css',
+			array(),
+			DFMG_VERSION
+		);
+
+		wp_enqueue_script(
+			'dfmg-frontend',
+			DFMG_PLUGIN_URL . 'assets/frontend.js',
+			array( 'masonry', 'imagesloaded' ),
+			DFMG_VERSION,
+			true
+		);
+	}
+
+	/**
+	 * Default gallery arguments.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function default_gallery_args() {
+		return array(
+			'ids'              => '',
+			'gallery_ids'      => '',
+			'columns'          => 3,
+			'tablet_columns'   => 2,
+			'mobile_columns'   => 1,
+			'gap'              => 18,
+			'image_size'       => 'large',
+			'filter_all_label' => __( 'All', 'divi-filterable-masonry-gallery' ),
+			'show_filters'     => 'on',
+			'show_captions'    => 'on',
+			'caption_source'   => 'caption',
+			'link_behavior'    => 'lightbox',
+			'orderby'          => 'post__in',
+			'order'            => 'ASC',
+			'include_terms'    => '',
+			'extra_class'      => '',
+		);
+	}
+
+	/**
+	 * Renders a gallery.
+	 *
+	 * @param array<string,mixed> $args Gallery arguments.
+	 * @return string
+	 */
+	public static function render_gallery( $args ) {
+		$args = wp_parse_args( (array) $args, self::default_gallery_args() );
+		$args = self::sanitize_gallery_args( $args );
+		$ids  = self::parse_attachment_ids( $args );
+
+		if ( empty( $ids ) ) {
+			if ( current_user_can( 'edit_posts' ) ) {
+				return sprintf(
+					'<div class="dfmg-empty">%s</div>',
+					esc_html__( 'Select images for the filterable masonry gallery.', 'divi-filterable-masonry-gallery' )
+				);
+			}
+
+			return '';
+		}
+
+		$attachments = self::get_attachments( $ids, $args );
+
+		if ( empty( $attachments ) ) {
+			return '';
+		}
+
+		$gallery_id = wp_unique_id( 'dfmg-gallery-' );
+		$terms      = self::collect_terms( wp_list_pluck( $attachments, 'ID' ), $args['include_terms'] );
+		$style      = self::gallery_style( $args );
+		$classes    = array_filter(
+			array(
+				'dfmg-gallery',
+				'dfmg-link-' . $args['link_behavior'],
+				$args['extra_class'],
+			)
+		);
+
+		ob_start();
+		?>
+		<div
+			id="<?php echo esc_attr( $gallery_id ); ?>"
+			class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+			style="<?php echo esc_attr( $style ); ?>"
+			data-dfmg-gallery
+		>
+			<?php if ( 'on' === $args['show_filters'] && ! empty( $terms ) ) : ?>
+				<div class="dfmg-filters" role="tablist" aria-label="<?php esc_attr_e( 'Gallery filters', 'divi-filterable-masonry-gallery' ); ?>">
+					<button class="dfmg-filter is-active" type="button" data-dfmg-filter="*" aria-selected="true">
+						<?php echo esc_html( $args['filter_all_label'] ); ?>
+					</button>
+					<?php foreach ( $terms as $term ) : ?>
+						<button class="dfmg-filter" type="button" data-dfmg-filter="<?php echo esc_attr( $term->slug ); ?>" aria-selected="false">
+							<?php echo esc_html( $term->name ); ?>
+						</button>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+
+			<div class="dfmg-grid" data-dfmg-grid>
+				<div class="dfmg-grid-sizer"></div>
+				<?php foreach ( $attachments as $attachment ) : ?>
+					<?php echo self::render_item( $attachment, $args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php endforeach; ?>
+			</div>
+		</div>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Sanitizes gallery args.
+	 *
+	 * @param array<string,mixed> $args Raw args.
+	 * @return array<string,mixed>
+	 */
+	private static function sanitize_gallery_args( $args ) {
+		$args['columns']        = self::bounded_int( $args['columns'], 1, 6, 3 );
+		$args['tablet_columns'] = self::bounded_int( $args['tablet_columns'], 1, 4, 2 );
+		$args['mobile_columns'] = self::bounded_int( $args['mobile_columns'], 1, 3, 1 );
+		$args['gap']            = self::bounded_int( $args['gap'], 0, 80, 18 );
+
+		$args['image_size']       = sanitize_key( (string) $args['image_size'] );
+		$args['filter_all_label'] = sanitize_text_field( (string) $args['filter_all_label'] );
+		$args['show_filters']     = self::bool_to_on_off( $args['show_filters'] );
+		$args['show_captions']    = self::bool_to_on_off( $args['show_captions'] );
+		$args['caption_source']   = self::one_of( sanitize_key( (string) $args['caption_source'] ), array( 'caption', 'title', 'alt', 'none' ), 'caption' );
+		$args['link_behavior']    = self::one_of( sanitize_key( (string) $args['link_behavior'] ), array( 'lightbox', 'file', 'attachment', 'none' ), 'lightbox' );
+		$args['orderby']          = self::one_of( sanitize_key( (string) $args['orderby'] ), array( 'post__in', 'date', 'title', 'menu_order', 'rand' ), 'post__in' );
+		$args['order']            = self::one_of( strtoupper( sanitize_key( (string) $args['order'] ) ), array( 'ASC', 'DESC' ), 'ASC' );
+		$args['include_terms']    = sanitize_text_field( (string) $args['include_terms'] );
+		$args['extra_class']      = sanitize_html_class( (string) $args['extra_class'] );
+
+		return $args;
+	}
+
+	/**
+	 * Parses selected image IDs from shortcode or Divi gallery field.
+	 *
+	 * @param array<string,mixed> $args Gallery args.
+	 * @return array<int>
+	 */
+	private static function parse_attachment_ids( $args ) {
+		$raw = ! empty( $args['ids'] ) ? $args['ids'] : $args['gallery_ids'];
+
+		if ( is_array( $raw ) ) {
+			$raw = implode( ',', $raw );
+		}
+
+		preg_match_all( '/\d+/', (string) $raw, $matches );
+		$ids = array_map( 'absint', $matches[0] );
+		$ids = array_values( array_unique( array_filter( $ids ) ) );
+
+		return $ids;
+	}
+
+	/**
+	 * Queries image attachments.
+	 *
+	 * @param array<int>           $ids  Attachment IDs.
+	 * @param array<string,mixed> $args Gallery args.
+	 * @return array<int,WP_Post>
+	 */
+	private static function get_attachments( $ids, $args ) {
+		$query_args = array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image',
+			'post_status'    => 'inherit',
+			'post__in'       => $ids,
+			'posts_per_page' => count( $ids ),
+			'orderby'        => $args['orderby'],
+			'order'          => $args['order'],
+		);
+
+		return get_posts( $query_args );
+	}
+
+	/**
+	 * Collects unique taxonomy terms from selected attachments.
+	 *
+	 * @param array<int> $attachment_ids Attachment IDs.
+	 * @param string     $include_terms  Optional comma-separated term slugs.
+	 * @return array<int,WP_Term>
+	 */
+	private static function collect_terms( $attachment_ids, $include_terms = '' ) {
+		$allowed_slugs = self::parse_slugs( $include_terms );
+		$terms_by_slug = array();
+
+		foreach ( $attachment_ids as $attachment_id ) {
+			$terms = wp_get_object_terms( $attachment_id, self::TAXONOMY );
+
+			if ( is_wp_error( $terms ) || empty( $terms ) ) {
+				continue;
+			}
+
+			foreach ( $terms as $term ) {
+				if ( ! empty( $allowed_slugs ) && ! in_array( $term->slug, $allowed_slugs, true ) ) {
+					continue;
+				}
+
+				$terms_by_slug[ $term->slug ] = $term;
+			}
+		}
+
+		uasort(
+			$terms_by_slug,
+			static function ( $a, $b ) {
+				return strnatcasecmp( $a->name, $b->name );
+			}
+		);
+
+		return array_values( $terms_by_slug );
+	}
+
+	/**
+	 * Renders one gallery item.
+	 *
+	 * @param WP_Post             $attachment Attachment post.
+	 * @param array<string,mixed> $args       Gallery args.
+	 * @return string
+	 */
+	private static function render_item( $attachment, $args ) {
+		$terms      = wp_get_object_terms( $attachment->ID, self::TAXONOMY );
+		$term_slugs = array();
+
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$term_slugs[] = $term->slug;
+			}
+		}
+
+		$caption = self::attachment_caption( $attachment, $args['caption_source'] );
+		$alt     = trim( (string) get_post_meta( $attachment->ID, '_wp_attachment_image_alt', true ) );
+
+		if ( '' === $alt ) {
+			$alt = get_the_title( $attachment );
+		}
+
+		$image = wp_get_attachment_image(
+			$attachment->ID,
+			$args['image_size'],
+			false,
+			array(
+				'class'    => 'dfmg-image',
+				'loading'  => 'lazy',
+				'decoding' => 'async',
+				'alt'      => $alt,
+			)
+		);
+
+		if ( '' === $image ) {
+			return '';
+		}
+
+		$link_open  = '';
+		$link_close = '';
+
+		if ( 'none' !== $args['link_behavior'] ) {
+			$link_data = self::link_data( $attachment, $args['link_behavior'], $caption );
+			$link_open = sprintf(
+				'<a class="dfmg-link" href="%1$s"%2$s%3$s%4$s>',
+				esc_url( $link_data['href'] ),
+				$link_data['lightbox'] ? ' data-dfmg-lightbox' : '',
+				'' !== $caption ? ' data-dfmg-caption="' . esc_attr( $caption ) . '"' : '',
+				'attachment' === $args['link_behavior'] ? '' : ' aria-label="' . esc_attr( get_the_title( $attachment ) ) . '"'
+			);
+			$link_close = '</a>';
+		}
+
+		ob_start();
+		?>
+		<article class="dfmg-item" data-dfmg-item data-dfmg-terms="<?php echo esc_attr( implode( ' ', $term_slugs ) ); ?>">
+			<figure class="dfmg-card">
+				<?php echo $link_open; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php echo $image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php echo $link_close; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+
+				<?php if ( 'on' === $args['show_captions'] && '' !== $caption ) : ?>
+					<figcaption class="dfmg-caption"><?php echo esc_html( $caption ); ?></figcaption>
+				<?php endif; ?>
+			</figure>
+		</article>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns data for item links.
+	 *
+	 * @param WP_Post $attachment    Attachment post.
+	 * @param string  $link_behavior Link behavior.
+	 * @param string  $caption       Caption text.
+	 * @return array{href:string,lightbox:bool,caption:string}
+	 */
+	private static function link_data( $attachment, $link_behavior, $caption ) {
+		if ( 'attachment' === $link_behavior ) {
+			return array(
+				'href'     => get_attachment_link( $attachment->ID ),
+				'lightbox' => false,
+				'caption'  => $caption,
+			);
+		}
+
+		$full = wp_get_attachment_image_src( $attachment->ID, 'full' );
+
+		return array(
+			'href'     => $full ? $full[0] : wp_get_attachment_url( $attachment->ID ),
+			'lightbox' => 'lightbox' === $link_behavior,
+			'caption'  => $caption,
+		);
+	}
+
+	/**
+	 * Resolves attachment caption text.
+	 *
+	 * @param WP_Post $attachment Attachment post.
+	 * @param string  $source     Caption source.
+	 * @return string
+	 */
+	private static function attachment_caption( $attachment, $source ) {
+		switch ( $source ) {
+			case 'title':
+				return trim( get_the_title( $attachment ) );
+
+			case 'alt':
+				return trim( (string) get_post_meta( $attachment->ID, '_wp_attachment_image_alt', true ) );
+
+			case 'none':
+				return '';
+
+			case 'caption':
+			default:
+				return trim( (string) wp_get_attachment_caption( $attachment->ID ) );
+		}
+	}
+
+	/**
+	 * Builds inline CSS custom properties.
+	 *
+	 * @param array<string,mixed> $args Gallery args.
+	 * @return string
+	 */
+	private static function gallery_style( $args ) {
+		return sprintf(
+			'--dfmg-columns:%1$d;--dfmg-tablet-columns:%2$d;--dfmg-mobile-columns:%3$d;--dfmg-gap:%4$dpx;',
+			(int) $args['columns'],
+			(int) $args['tablet_columns'],
+			(int) $args['mobile_columns'],
+			(int) $args['gap']
+		);
+	}
+
+	/**
+	 * Converts common boolean-ish values to on/off.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private static function bool_to_on_off( $value ) {
+		if ( is_bool( $value ) ) {
+			return $value ? 'on' : 'off';
+		}
+
+		$value = strtolower( trim( (string) $value ) );
+
+		return in_array( $value, array( '1', 'yes', 'true', 'on', 'show' ), true ) ? 'on' : 'off';
+	}
+
+	/**
+	 * Returns a bounded integer.
+	 *
+	 * @param mixed $value    Raw value.
+	 * @param int   $min      Minimum.
+	 * @param int   $max      Maximum.
+	 * @param int   $fallback Fallback.
+	 * @return int
+	 */
+	private static function bounded_int( $value, $min, $max, $fallback ) {
+		if ( is_numeric( $value ) ) {
+			$value = (int) $value;
+		} elseif ( is_string( $value ) && preg_match( '/-?\d+/', $value, $matches ) ) {
+			$value = (int) $matches[0];
+		} else {
+			$value = $fallback;
+		}
+
+		return min( $max, max( $min, $value ) );
+	}
+
+	/**
+	 * Returns value when it exists in allowed list, otherwise fallback.
+	 *
+	 * @param string       $value    Value.
+	 * @param array<string> $allowed  Allowed values.
+	 * @param string       $fallback Fallback.
+	 * @return string
+	 */
+	private static function one_of( $value, $allowed, $fallback ) {
+		return in_array( $value, $allowed, true ) ? $value : $fallback;
+	}
+
+	/**
+	 * Parses comma-separated slugs.
+	 *
+	 * @param string $value Raw value.
+	 * @return array<string>
+	 */
+	private static function parse_slugs( $value ) {
+		if ( '' === trim( $value ) ) {
+			return array();
+		}
+
+		$parts = array_map( 'sanitize_title', explode( ',', $value ) );
+
+		return array_values( array_filter( array_unique( $parts ) ) );
+	}
+}
