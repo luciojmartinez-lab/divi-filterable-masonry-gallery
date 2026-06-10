@@ -46,6 +46,13 @@ class DFMG_Divi_Module extends ET_Builder_Module {
 	 */
 	public function get_fields() {
 		return array(
+			'gallery'          => array(
+				'label'           => esc_html__( 'Saved Gallery Slug', 'divi-filterable-masonry-gallery' ),
+				'type'            => 'text',
+				'option_category' => 'basic_option',
+				'toggle_slug'     => 'main_content',
+				'description'     => esc_html__( 'Optional saved gallery slug, for example mi-galeria. Selected images below override this value.', 'divi-filterable-masonry-gallery' ),
+			),
 			'gallery_ids'      => array(
 				'label'           => esc_html__( 'Images', 'divi-filterable-masonry-gallery' ),
 				'type'            => 'upload-gallery',

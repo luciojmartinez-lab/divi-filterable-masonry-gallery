@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,6 +18,7 @@ The plugin includes:
 
 * A Divi builder module when the classic Divi module API is available.
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
+* Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
 * Frontend filtering, WordPress-bundled Masonry, lazy-loaded images, captions, and a small lightbox.
 
@@ -26,7 +27,8 @@ The plugin includes:
 1. Upload the plugin ZIP through Plugins > Add New > Upload Plugin.
 2. Activate the plugin.
 3. Go to Media Library, edit images, and assign terms under Gallery Filters.
-4. In Divi, add the "Filterable Masonry Gallery" module when it appears. If your Divi 5 build does not expose the compatibility API, use the shortcode fallback.
+4. Go to Masonry Galleries > Add New, create a gallery, and choose images.
+5. In Divi, add the "Filterable Masonry Gallery" module when it appears. If your Divi 5 build does not expose the compatibility API, use the shortcode fallback.
 
 == Shortcode ==
 
@@ -34,12 +36,17 @@ Basic example:
 
 `[dfmg_gallery ids="12,34,56"]`
 
+Saved gallery example:
+
+`[dfmg_gallery gallery="mi-galeria"]`
+
 Fuller example:
 
-`[dfmg_gallery ids="12,34,56" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox"]`
+`[dfmg_gallery gallery="mi-galeria" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox"]`
 
 Options:
 
+* `gallery`: saved Masonry Gallery slug or ID.
 * `ids`: comma-separated attachment IDs.
 * `columns`: desktop columns from 1 to 6.
 * `tablet_columns`: tablet columns from 1 to 4.
@@ -58,6 +65,9 @@ Options:
 Divi 5 has evolved its extension APIs. This plugin registers a classic Divi custom module when Divi exposes `ET_Builder_Module`, which Divi 5 compatibility builds can load. The shortcode remains the stable integration path and can be placed in a Divi Code or Text module.
 
 == Changelog ==
+
+= 1.1.0 =
+Add saved Masonry Galleries with an admin media picker and support for `[dfmg_gallery gallery="mi-galeria"]`.
 
 = 1.0.1 =
 Fix masonry height recalculation inside the Divi 5 Visual Builder so galleries do not overlap following page content.

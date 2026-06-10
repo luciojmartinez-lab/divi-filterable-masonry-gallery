@@ -6,6 +6,7 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 
 - Divi-compatible custom module when the classic Divi builder API is available.
 - Stable `[dfmg_gallery]` shortcode fallback for Divi 5 Code/Text modules or any WordPress content area.
+- Saved Masonry Galleries with a WordPress media picker and reusable slugs.
 - Gallery Filters taxonomy for images in the Media Library.
 - Frontend filtering by media terms.
 - Masonry layout using WordPress-bundled Masonry and imagesLoaded.
@@ -19,7 +20,8 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 2. In WordPress, go to Plugins > Add New > Upload Plugin.
 3. Upload and activate the ZIP.
 4. Edit images in the Media Library and assign terms under Gallery Filters.
-5. Add the Divi module if it appears, or use the shortcode fallback.
+5. Go to Masonry Galleries > Add New, create a gallery, and choose images.
+6. Add the Divi module if it appears, or use the shortcode fallback.
 
 ## Shortcode
 
@@ -28,11 +30,16 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 ```
 
 ```text
-[dfmg_gallery ids="12,34,56" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox"]
+[dfmg_gallery gallery="mi-galeria"]
+```
+
+```text
+[dfmg_gallery gallery="mi-galeria" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox"]
 ```
 
 ### Options
 
+- `gallery`: saved Masonry Gallery slug or ID.
 - `ids`: comma-separated attachment IDs.
 - `columns`: desktop columns from 1 to 6.
 - `tablet_columns`: tablet columns from 1 to 4.
@@ -55,7 +62,7 @@ Divi 5 has been evolving its extension APIs. This plugin registers a classic Div
 The plugin does not require a build step. Edit the PHP, CSS, or JavaScript files directly and package the `divi-filterable-masonry-gallery` folder as a ZIP for installation.
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.0.1.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.1.0.zip -Force
 ```
 
 ## License

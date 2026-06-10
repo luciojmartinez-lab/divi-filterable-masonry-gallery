@@ -1,0 +1,39 @@
+.dfmg-admin-gallery__preview {
+	align-content: flex-start;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	min-height: 120px;
+	padding: 12px;
+}
+
+.dfmg-admin-gallery__empty {
+	color: #646970;
+	margin: 0;
+}
+
+.dfmg-admin-gallery__thumb {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	box-sizing: border-box;
+	display: block;
+	height: 92px;
+	padding: 4px;
+	width: 92px;
+}
+
+.dfmg-admin-gallery__image {
+	display: block;
+	height: 82px;
+	object-fit: cover;
+	width: 82px;
+}
+
+.dfmg-admin-gallery__actions {
+	display: flex;
+	gap: 8px;
+	margin: 12px 0 8px;
+}

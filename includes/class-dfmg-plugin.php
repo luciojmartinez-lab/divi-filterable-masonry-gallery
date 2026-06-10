@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class DFMG_Plugin {
 	const TAXONOMY = 'dfmg_gallery_filter';
+	const POST_TYPE = 'dfmg_gallery';
+	const IDS_META_KEY = '_dfmg_gallery_ids';
 
 	/**
 	 * Singleton instance.
@@ -40,10 +42,14 @@ final class DFMG_Plugin {
 	 */
 	private function __construct() {
 		add_action( 'init', array( $this, 'load_textdomain' ), 0 );
+		add_action( 'init', array( $this, 'register_gallery_post_type' ) );
 		add_action( 'init', array( $this, 'register_media_taxonomy' ) );
 		add_shortcode( 'dfmg_gallery', array( $this, 'shortcode' ) );
 		add_shortcode( 'divi_masonry_gallery', array( $this, 'shortcode' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_gallery_meta_boxes' ) );
+		add_action( 'save_post_' . self::POST_TYPE, array( $this, 'save_gallery_meta' ) );
 		add_action( 'et_builder_ready', array( $this, 'register_divi_module' ) );
 	}
 
@@ -57,6 +63,42 @@ final class DFMG_Plugin {
 			'divi-filterable-masonry-gallery',
 			false,
 			dirname( plugin_basename( DFMG_PLUGIN_FILE ) ) . '/languages'
+		);
+	}
+
+	/**
+	 * Registers saved gallery posts.
+	 *
+	 * @return void
+	 */
+	public function register_gallery_post_type() {
+		$labels = array(
+			'name'               => __( 'Masonry Galleries', 'divi-filterable-masonry-gallery' ),
+			'singular_name'      => __( 'Masonry Gallery', 'divi-filterable-masonry-gallery' ),
+			'add_new'            => __( 'Add New', 'divi-filterable-masonry-gallery' ),
+			'add_new_item'       => __( 'Add New Masonry Gallery', 'divi-filterable-masonry-gallery' ),
+			'edit_item'          => __( 'Edit Masonry Gallery', 'divi-filterable-masonry-gallery' ),
+			'new_item'           => __( 'New Masonry Gallery', 'divi-filterable-masonry-gallery' ),
+			'view_item'          => __( 'View Masonry Gallery', 'divi-filterable-masonry-gallery' ),
+			'search_items'       => __( 'Search Masonry Galleries', 'divi-filterable-masonry-gallery' ),
+			'not_found'          => __( 'No galleries found', 'divi-filterable-masonry-gallery' ),
+			'not_found_in_trash' => __( 'No galleries found in Trash', 'divi-filterable-masonry-gallery' ),
+			'menu_name'          => __( 'Masonry Galleries', 'divi-filterable-masonry-gallery' ),
+		);
+
+		register_post_type(
+			self::POST_TYPE,
+			array(
+				'labels'          => $labels,
+				'public'          => false,
+				'show_ui'         => true,
+				'show_in_menu'    => true,
+				'menu_icon'       => 'dashicons-format-gallery',
+				'menu_position'   => 58,
+				'supports'        => array( 'title' ),
+				'capability_type' => 'post',
+				'rewrite'         => false,
+			)
 		);
 	}
 
@@ -160,12 +202,168 @@ final class DFMG_Plugin {
 	}
 
 	/**
+	 * Enqueues admin assets for saved galleries.
+	 *
+	 * @param string $hook_suffix Current admin hook.
+	 * @return void
+	 */
+	public function enqueue_admin_assets( $hook_suffix ) {
+		if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || self::POST_TYPE !== $screen->post_type ) {
+			return;
+		}
+
+		wp_enqueue_media();
+
+		wp_enqueue_style(
+			'dfmg-admin',
+			DFMG_PLUGIN_URL . 'assets/admin.css',
+			array(),
+			DFMG_VERSION
+		);
+
+		wp_enqueue_script(
+			'dfmg-admin',
+			DFMG_PLUGIN_URL . 'assets/admin.js',
+			array(),
+			DFMG_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'dfmg-admin',
+			'DFMGAdmin',
+			array(
+				'frameTitle' => __( 'Select gallery images', 'divi-filterable-masonry-gallery' ),
+				'buttonText' => __( 'Use selected images', 'divi-filterable-masonry-gallery' ),
+				'emptyText'  => __( 'No images selected yet.', 'divi-filterable-masonry-gallery' ),
+			)
+		);
+	}
+
+	/**
+	 * Adds saved gallery meta boxes.
+	 *
+	 * @return void
+	 */
+	public function add_gallery_meta_boxes() {
+		add_meta_box(
+			'dfmg_gallery_images',
+			__( 'Gallery Images', 'divi-filterable-masonry-gallery' ),
+			array( $this, 'render_gallery_images_meta_box' ),
+			self::POST_TYPE,
+			'normal',
+			'high'
+		);
+
+		add_meta_box(
+			'dfmg_gallery_shortcode',
+			__( 'Shortcode', 'divi-filterable-masonry-gallery' ),
+			array( $this, 'render_gallery_shortcode_meta_box' ),
+			self::POST_TYPE,
+			'side',
+			'default'
+		);
+	}
+
+	/**
+	 * Renders gallery image selector.
+	 *
+	 * @param WP_Post $post Gallery post.
+	 * @return void
+	 */
+	public function render_gallery_images_meta_box( $post ) {
+		$ids = self::parse_ids_from_value( get_post_meta( $post->ID, self::IDS_META_KEY, true ) );
+
+		wp_nonce_field( 'dfmg_save_gallery', 'dfmg_gallery_nonce' );
+		?>
+		<div class="dfmg-admin-gallery" data-dfmg-admin-gallery>
+			<input type="hidden" name="dfmg_gallery_ids" value="<?php echo esc_attr( implode( ',', $ids ) ); ?>" data-dfmg-ids>
+
+			<div class="dfmg-admin-gallery__preview" data-dfmg-preview>
+				<?php if ( empty( $ids ) ) : ?>
+					<p class="dfmg-admin-gallery__empty"><?php esc_html_e( 'No images selected yet.', 'divi-filterable-masonry-gallery' ); ?></p>
+				<?php else : ?>
+					<?php foreach ( $ids as $id ) : ?>
+						<?php echo self::admin_preview_image( $id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</div>
+
+			<p class="dfmg-admin-gallery__actions">
+				<button type="button" class="button button-primary" data-dfmg-select>
+					<?php esc_html_e( 'Select Images', 'divi-filterable-masonry-gallery' ); ?>
+				</button>
+				<button type="button" class="button" data-dfmg-clear>
+					<?php esc_html_e( 'Clear', 'divi-filterable-masonry-gallery' ); ?>
+				</button>
+			</p>
+
+			<p class="description">
+				<?php esc_html_e( 'Drag images inside the media modal to reorder them before inserting.', 'divi-filterable-masonry-gallery' ); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Renders shortcode helper box.
+	 *
+	 * @param WP_Post $post Gallery post.
+	 * @return void
+	 */
+	public function render_gallery_shortcode_meta_box( $post ) {
+		$slug      = $post->post_name ? $post->post_name : sanitize_title( $post->post_title );
+		$shortcode = $slug ? sprintf( '[dfmg_gallery gallery="%s"]', $slug ) : __( 'Save this gallery to generate a shortcode.', 'divi-filterable-masonry-gallery' );
+		?>
+		<p><?php esc_html_e( 'Use this in Divi Code/Text modules or regular content:', 'divi-filterable-masonry-gallery' ); ?></p>
+		<input type="text" class="widefat code" readonly value="<?php echo esc_attr( $shortcode ); ?>" onclick="this.select();">
+		<?php
+	}
+
+	/**
+	 * Saves selected image IDs.
+	 *
+	 * @param int $post_id Gallery post ID.
+	 * @return void
+	 */
+	public function save_gallery_meta( $post_id ) {
+		if ( ! isset( $_POST['dfmg_gallery_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['dfmg_gallery_nonce'] ) ), 'dfmg_save_gallery' ) ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		$raw_ids = isset( $_POST['dfmg_gallery_ids'] ) ? wp_unslash( $_POST['dfmg_gallery_ids'] ) : '';
+		$ids     = self::parse_ids_from_value( $raw_ids );
+
+		if ( empty( $ids ) ) {
+			delete_post_meta( $post_id, self::IDS_META_KEY );
+			return;
+		}
+
+		update_post_meta( $post_id, self::IDS_META_KEY, implode( ',', $ids ) );
+	}
+
+	/**
 	 * Default gallery arguments.
 	 *
 	 * @return array<string,mixed>
 	 */
 	public static function default_gallery_args() {
 		return array(
+			'gallery'          => '',
 			'ids'              => '',
 			'gallery_ids'      => '',
 			'columns'          => 3,
@@ -270,6 +468,7 @@ final class DFMG_Plugin {
 		$args['gap']            = self::bounded_int( $args['gap'], 0, 80, 18 );
 
 		$args['image_size']       = sanitize_key( (string) $args['image_size'] );
+		$args['gallery']          = sanitize_text_field( (string) $args['gallery'] );
 		$args['filter_all_label'] = sanitize_text_field( (string) $args['filter_all_label'] );
 		$args['show_filters']     = self::bool_to_on_off( $args['show_filters'] );
 		$args['show_captions']    = self::bool_to_on_off( $args['show_captions'] );
@@ -291,16 +490,84 @@ final class DFMG_Plugin {
 	 */
 	private static function parse_attachment_ids( $args ) {
 		$raw = ! empty( $args['ids'] ) ? $args['ids'] : $args['gallery_ids'];
+		$ids = self::parse_ids_from_value( $raw );
 
+		if ( empty( $ids ) && ! empty( $args['gallery'] ) ) {
+			$ids = self::get_saved_gallery_ids( $args['gallery'] );
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * Parses image IDs from raw shortcode, Divi, or saved meta values.
+	 *
+	 * @param mixed $raw Raw IDs.
+	 * @return array<int>
+	 */
+	private static function parse_ids_from_value( $raw ) {
 		if ( is_array( $raw ) ) {
 			$raw = implode( ',', $raw );
 		}
 
 		preg_match_all( '/\d+/', (string) $raw, $matches );
 		$ids = array_map( 'absint', $matches[0] );
-		$ids = array_values( array_unique( array_filter( $ids ) ) );
 
-		return $ids;
+		return array_values( array_unique( array_filter( $ids ) ) );
+	}
+
+	/**
+	 * Gets attachment IDs from a saved gallery slug or ID.
+	 *
+	 * @param string $gallery_ref Saved gallery slug or ID.
+	 * @return array<int>
+	 */
+	private static function get_saved_gallery_ids( $gallery_ref ) {
+		$gallery_ref = trim( (string) $gallery_ref );
+
+		if ( '' === $gallery_ref ) {
+			return array();
+		}
+
+		if ( is_numeric( $gallery_ref ) ) {
+			$post_id = absint( $gallery_ref );
+		} else {
+			$post    = get_page_by_path( sanitize_title( $gallery_ref ), OBJECT, self::POST_TYPE );
+			$post_id = $post instanceof WP_Post ? $post->ID : 0;
+		}
+
+		if ( ! $post_id || self::POST_TYPE !== get_post_type( $post_id ) ) {
+			return array();
+		}
+
+		return self::parse_ids_from_value( get_post_meta( $post_id, self::IDS_META_KEY, true ) );
+	}
+
+	/**
+	 * Returns one admin preview image.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return string
+	 */
+	private static function admin_preview_image( $attachment_id ) {
+		$image = wp_get_attachment_image(
+			$attachment_id,
+			'thumbnail',
+			false,
+			array(
+				'class' => 'dfmg-admin-gallery__image',
+			)
+		);
+
+		if ( '' === $image ) {
+			return '';
+		}
+
+		return sprintf(
+			'<span class="dfmg-admin-gallery__thumb" data-dfmg-id="%1$d">%2$s</span>',
+			absint( $attachment_id ),
+			$image
+		);
 	}
 
 	/**
