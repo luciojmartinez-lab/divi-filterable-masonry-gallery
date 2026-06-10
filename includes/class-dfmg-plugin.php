@@ -182,9 +182,6 @@ final class DFMG_Plugin {
 	 * @return void
 	 */
 	public function enqueue_frontend_assets() {
-		wp_enqueue_script( 'masonry' );
-		wp_enqueue_script( 'imagesloaded' );
-
 		wp_enqueue_style(
 			'dfmg-frontend',
 			DFMG_PLUGIN_URL . 'assets/frontend.css',
@@ -195,7 +192,7 @@ final class DFMG_Plugin {
 		wp_enqueue_script(
 			'dfmg-frontend',
 			DFMG_PLUGIN_URL . 'assets/frontend.js',
-			array( 'masonry', 'imagesloaded' ),
+			array(),
 			DFMG_VERSION,
 			true
 		);

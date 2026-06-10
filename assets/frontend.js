@@ -26,7 +26,6 @@
 		var filters = Array.prototype.slice.call(gallery.querySelectorAll('[data-dfmg-filter]'));
 		var items = Array.prototype.slice.call(gallery.querySelectorAll('[data-dfmg-item]'));
 		var images = Array.prototype.slice.call(gallery.querySelectorAll('img'));
-		var masonry = null;
 		var entry = null;
 
 		if (!grid || !items.length) {
@@ -34,21 +33,6 @@
 		}
 
 		gallery.setAttribute('data-dfmg-ready', 'true');
-
-		if (window.Masonry) {
-			masonry = new window.Masonry(grid, {
-				itemSelector: '[data-dfmg-item]:not(.is-hidden)',
-				columnWidth: '.dfmg-grid-sizer',
-				percentPosition: true,
-				transitionDuration: '0.18s'
-			});
-
-			if (window.imagesLoaded) {
-				window.imagesLoaded(grid, function () {
-					layoutGallery(entry);
-				});
-			}
-		}
 
 		filters.forEach(function (button) {
 			button.addEventListener('click', function () {
@@ -66,11 +50,7 @@
 					item.classList.toggle('is-hidden', !visible);
 				});
 
-				if (masonry) {
-					layoutGallery(entry);
-				} else {
-					syncGridHeight(entry);
-				}
+				layoutGallery(entry);
 			});
 		});
 
@@ -79,8 +59,7 @@
 		entry = {
 			gallery: gallery,
 			grid: grid,
-			items: items,
-			masonry: masonry
+			items: items
 		};
 
 		galleries.push(entry);
@@ -113,13 +92,20 @@
 			return;
 		}
 
-		if (entry.masonry) {
-			entry.masonry.reloadItems();
-			entry.masonry.layout();
-		}
+		resetMasonryStyles(entry);
 
 		window.requestAnimationFrame(function () {
 			syncGridHeight(entry);
+		});
+	}
+
+	function resetMasonryStyles(entry) {
+		entry.grid.style.height = '';
+
+		entry.items.forEach(function (item) {
+			item.style.position = '';
+			item.style.left = '';
+			item.style.top = '';
 		});
 	}
 

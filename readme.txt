@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ The plugin includes:
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
-* Frontend filtering, WordPress-bundled Masonry, lazy-loaded images, captions, and a small lightbox.
+* Frontend filtering, CSS masonry-style layout, lazy-loaded images, captions, and a small lightbox.
 
 == Installation ==
 
@@ -65,6 +65,9 @@ Options:
 Divi 5 has evolved its extension APIs. This plugin registers a classic Divi custom module when Divi exposes `ET_Builder_Module`, which Divi 5 compatibility builds can load. The shortcode remains the stable integration path and can be placed in a Divi Code or Text module.
 
 == Changelog ==
+
+= 1.1.1 =
+Switch frontend masonry layout to CSS columns so galleries stay in normal page flow and do not overlap the footer in Divi 5.
 
 = 1.1.0 =
 Add saved Masonry Galleries with an admin media picker and support for `[dfmg_gallery gallery="mi-galeria"]`.
