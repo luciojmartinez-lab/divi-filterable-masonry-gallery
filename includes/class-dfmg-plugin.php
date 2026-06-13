@@ -212,6 +212,19 @@ final class DFMG_Plugin {
 
 		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
 			array(
+				'name'    => 'dfmg-divi5-sidebar-script',
+				'version' => DFMG_VERSION,
+				'script'  => array(
+					'src'                => DFMG_PLUGIN_URL . 'assets/divi5-sidebar.js',
+					'deps'               => array(),
+					'enqueue_top_window' => true,
+					'enqueue_app_window' => false,
+				),
+			)
+		);
+
+		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
+			array(
 				'name'    => 'dfmg-divi5-frontend-script',
 				'version' => DFMG_VERSION,
 				'script'  => array(
@@ -230,7 +243,7 @@ final class DFMG_Plugin {
 				'style'   => array(
 					'src'                => DFMG_PLUGIN_URL . 'assets/frontend.css',
 					'deps'               => array(),
-					'enqueue_top_window' => false,
+					'enqueue_top_window' => true,
 					'enqueue_app_window' => true,
 				),
 			)
