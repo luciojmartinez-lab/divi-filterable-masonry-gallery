@@ -93,40 +93,17 @@
 		}
 
 		resetMasonryStyles(entry);
-
-		window.requestAnimationFrame(function () {
-			syncGridHeight(entry);
-		});
 	}
 
 	function resetMasonryStyles(entry) {
 		entry.grid.style.height = '';
+		entry.grid.style.minHeight = '';
 
 		entry.items.forEach(function (item) {
 			item.style.position = '';
 			item.style.left = '';
 			item.style.top = '';
 		});
-	}
-
-	function syncGridHeight(entry) {
-		var bottom = 0;
-
-		if (!entry || !entry.grid) {
-			return;
-		}
-
-		entry.items.forEach(function (item) {
-			if (item.classList.contains('is-hidden') || item.offsetParent === null) {
-				return;
-			}
-
-			bottom = Math.max(bottom, item.offsetTop + item.offsetHeight);
-		});
-
-		if (bottom > 0) {
-			entry.grid.style.minHeight = bottom + 'px';
-		}
 	}
 
 	function initLightboxLinks(gallery) {

@@ -119,8 +119,8 @@
 .dfmg-builder-controls {
 	background: #fff;
 	border: 1px solid #d1d5db;
-	margin: 0 0 14px;
-	padding: 12px;
+	margin: 0 0 16px;
+	padding: 10px;
 }
 
 .dfmg-builder-controls__bar {
@@ -138,9 +138,9 @@
 	color: #fff;
 	cursor: pointer;
 	font: inherit;
-	font-size: 13px;
+	font-size: 12px;
 	line-height: 1.2;
-	padding: 8px 12px;
+	padding: 7px 10px;
 }
 
 .dfmg-builder-button--secondary {
@@ -150,15 +150,15 @@
 
 .dfmg-builder-count {
 	color: #4b5563;
-	font-size: 13px;
-	margin-left: auto;
+	font-size: 12px;
+	margin-top: 8px;
 }
 
 .dfmg-builder-thumbs {
 	display: grid;
-	gap: 8px;
-	grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-	margin-top: 12px;
+	gap: 6px;
+	grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+	margin-top: 8px;
 }
 
 .dfmg-builder-thumb {
@@ -187,6 +187,12 @@
 
 .dfmg-builder-preview {
 	clear: both;
+}
+
+.dfmg-builder-empty-note {
+	color: #6b7280;
+	font-size: 12px;
+	margin: 8px 0 0;
 }
 
 .dfmg-lightbox {

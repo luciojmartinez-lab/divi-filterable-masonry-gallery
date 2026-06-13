@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.1 =
+Move Divi 5 image editing controls into the settings sidebar, translate the action buttons, and remove the forced preview min-height that could leave extra blank space after the gallery.
 
 = 1.3.0 =
 Add a real Divi 5 Visual Builder preview, visual media selector controls with thumbnail drag-and-drop reordering, editor REST preview endpoint, and Lucio J. Martinez plugin attribution.

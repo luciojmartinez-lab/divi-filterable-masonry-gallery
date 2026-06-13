@@ -23,7 +23,7 @@
 		attributes: {
 			module: moduleAttribute(),
 			gallery: fieldAttribute('gallery', 'Saved Gallery Slug', '', 'contentGallery', 10, 'divi/text', 'Use a saved Masonry Gallery slug, for example mi-galeria.'),
-			ids: fieldAttribute('ids', 'Image IDs', '', 'contentGallery', 20, 'divi/textarea', 'Optional comma-separated attachment IDs. Use the visual selector in the module preview to choose and reorder images.'),
+			ids: fieldAttribute('ids', 'Image IDs', '', 'contentGallery', 20, 'divi/textarea', 'Optional comma-separated attachment IDs. Use the visual selector above to choose and reorder images.'),
 			columns: fieldAttribute('columns', 'Desktop Columns', '3', 'layoutGallery', 10, 'divi/text', ''),
 			tabletColumns: fieldAttribute('tabletColumns', 'Tablet Columns', '2', 'layoutGallery', 20, 'divi/text', ''),
 			mobileColumns: fieldAttribute('mobileColumns', 'Mobile Columns', '1', 'layoutGallery', 30, 'divi/text', ''),
@@ -252,9 +252,18 @@
 		});
 	}
 
+	function moduleId(props) {
+		return props.id || props.clientId || props.moduleId || props.blockId || (props.block && props.block.clientId) || '';
+	}
+
+	function moduleAttrs(props) {
+		return props.attrs || props.moduleAttrs || props.attributes || {};
+	}
+
 	function updateModuleAttrs(props, values) {
 		var payload = {};
 		var attempts = [];
+		var id = moduleId(props);
 		var wpData = window.wp && window.wp.data ? window.wp.data : (window.top && window.top.wp && window.top.wp.data ? window.top.wp.data : null);
 
 		Object.keys(values).forEach(function (key) {
@@ -273,7 +282,7 @@
 					fn(payload);
 				});
 				attempts.push(function () {
-					fn(props.id, payload);
+					fn(id, payload);
 				});
 			}
 		});
@@ -285,19 +294,19 @@
 						props.actions[name](payload);
 					});
 					attempts.push(function () {
-						props.actions[name](props.id, payload);
+						props.actions[name](id, payload);
 					});
 				}
 			});
 		}
 
-		if (wpData && props.id) {
+		if (wpData && id) {
 			['core/block-editor', 'core/editor'].forEach(function (store) {
 				attempts.push(function () {
 					var dispatch = wpData.dispatch(store);
 
 					if (dispatch && typeof dispatch.updateBlockAttributes === 'function') {
-						dispatch.updateBlockAttributes(props.id, payload);
+						dispatch.updateBlockAttributes(id, payload);
 					}
 				});
 			});
@@ -388,13 +397,7 @@
 		});
 	}
 
-	function Edit(props) {
-		var attrs = props.attrs || {};
-		var attrGallery = attrValue(attrs, 'gallery', '');
-		var attrIds = attrValue(attrs, 'ids', '');
-		var localIdsState = React.useState(null);
-		var localIds = localIdsState[0];
-		var setLocalIds = localIdsState[1];
+	function usePreview(attrs, activeIds, activeGallery) {
 		var previewState = React.useState({
 			html: '',
 			ids: '',
@@ -404,17 +407,8 @@
 		});
 		var preview = previewState[0];
 		var setPreview = previewState[1];
-		var previewRef = React.useRef(null);
-		var dragIndexRef = React.useRef(null);
-		var attrKey = attrGallery + '|' + attrIds;
-		var activeIds = localIds !== null ? localIds : attrIds;
-		var activeGallery = localIds !== null ? '' : attrGallery;
 		var params = previewParams(attrs, activeIds, activeGallery);
 		var paramsKey = JSON.stringify(params);
-
-		React.useEffect(function () {
-			setLocalIds(null);
-		}, [attrKey]);
 
 		React.useEffect(function () {
 			var controller = window.AbortController ? new window.AbortController() : null;
@@ -474,11 +468,58 @@
 			};
 		}, [paramsKey]);
 
+		return preview;
+	}
+
+	function GalleryPreview(props) {
+		var attrs = moduleAttrs(props);
+		var previewRef = React.useRef(null);
+		var preview = usePreview(
+			attrs,
+			attrValue(attrs, 'ids', ''),
+			attrValue(attrs, 'gallery', '')
+		);
+
 		React.useEffect(function () {
 			if (previewRef.current && window.DFMGInitGalleries) {
 				window.DFMGInitGalleries(previewRef.current);
 			}
 		}, [preview.html]);
+
+		return React.createElement(
+			'div',
+			{ className: 'dfmg-builder-preview', ref: previewRef },
+			preview.loading
+				? React.createElement('div', { className: 'dfmg-empty' }, 'Cargando previsualización...')
+				: null,
+			!preview.loading && preview.error
+				? React.createElement('div', { className: 'dfmg-empty' }, preview.error)
+				: null,
+			!preview.loading && !preview.error && preview.html
+				? React.createElement('div', { dangerouslySetInnerHTML: { __html: preview.html } })
+				: null,
+			!preview.loading && !preview.error && !preview.html
+				? React.createElement('div', { className: 'dfmg-empty' }, 'Selecciona imágenes o escribe un slug de galería guardada.')
+				: null
+		);
+	}
+
+	function GallerySelector(props) {
+		var attrs = moduleAttrs(props);
+		var attrGallery = attrValue(attrs, 'gallery', '');
+		var attrIds = attrValue(attrs, 'ids', '');
+		var localIdsState = React.useState(null);
+		var localIds = localIdsState[0];
+		var setLocalIds = localIdsState[1];
+		var dragIndexRef = React.useRef(null);
+		var attrKey = attrGallery + '|' + attrIds;
+		var activeIds = localIds !== null ? localIds : attrIds;
+		var activeGallery = localIds !== null ? '' : attrGallery;
+		var preview = usePreview(attrs, activeIds, activeGallery);
+
+		React.useEffect(function () {
+			setLocalIds(null);
+		}, [attrKey]);
 
 		function setDirectIds(ids) {
 			var value = ids.join(',');
@@ -510,9 +551,9 @@
 			}
 
 			frame = apiWindow.wp.media({
-				title: 'Select gallery images',
+				title: 'Seleccionar imágenes de la galería',
 				button: {
-					text: 'Use selected images'
+					text: 'Usar imágenes seleccionadas'
 				},
 				library: {
 					type: 'image'
@@ -566,7 +607,11 @@
 
 		function renderThumbs() {
 			if (!preview.items.length) {
-				return null;
+				return React.createElement(
+					'p',
+					{ className: 'dfmg-builder-empty-note' },
+					'No hay imágenes seleccionadas.'
+				);
 			}
 
 			return React.createElement(
@@ -599,6 +644,46 @@
 		}
 
 		return React.createElement(
+			'div',
+			{ className: 'dfmg-builder-controls' },
+			React.createElement(
+				'div',
+				{ className: 'dfmg-builder-controls__bar' },
+				React.createElement(
+					'button',
+					{ className: 'dfmg-builder-button', type: 'button', onClick: openMediaFrame },
+					'Añadir/editar imágenes'
+				),
+				React.createElement(
+					'button',
+					{ className: 'dfmg-builder-button dfmg-builder-button--secondary', type: 'button', onClick: clearDirectSelection },
+					'Limpiar'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'dfmg-builder-count' },
+				preview.items.length + (1 === preview.items.length ? ' imagen' : ' imágenes')
+			),
+			renderThumbs()
+		);
+	}
+
+	function SettingsContent(props) {
+		return React.createElement(
+			React.Fragment,
+			null,
+			React.createElement(GallerySelector, props),
+			diviModule.ModuleGroups && props.groupConfiguration
+				? React.createElement(diviModule.ModuleGroups, { groups: props.groupConfiguration })
+				: null
+		);
+	}
+
+	function Edit(props) {
+		var attrs = moduleAttrs(props);
+
+		return React.createElement(
 			diviModule.ModuleContainer,
 			{
 				attrs: attrs,
@@ -612,46 +697,7 @@
 			props.elements && props.elements.styleComponents
 				? props.elements.styleComponents({ attrName: 'module' })
 				: null,
-			React.createElement(
-				'div',
-				{ className: 'dfmg-builder-controls' },
-				React.createElement(
-					'div',
-					{ className: 'dfmg-builder-controls__bar' },
-					React.createElement(
-						'button',
-						{ className: 'dfmg-builder-button', type: 'button', onClick: openMediaFrame },
-						preview.items.length ? 'Edit images' : 'Select images'
-					),
-					React.createElement(
-						'button',
-						{ className: 'dfmg-builder-button dfmg-builder-button--secondary', type: 'button', onClick: clearDirectSelection },
-						'Clear'
-					),
-					React.createElement(
-						'span',
-						{ className: 'dfmg-builder-count' },
-						preview.items.length + ' images'
-					)
-				),
-				renderThumbs()
-			),
-			React.createElement(
-				'div',
-				{ className: 'dfmg-builder-preview', ref: previewRef },
-				preview.loading
-					? React.createElement('div', { className: 'dfmg-empty' }, 'Loading gallery preview...')
-					: null,
-				!preview.loading && preview.error
-					? React.createElement('div', { className: 'dfmg-empty' }, preview.error)
-					: null,
-				!preview.loading && !preview.error && preview.html
-					? React.createElement('div', { dangerouslySetInnerHTML: { __html: preview.html } })
-					: null,
-				!preview.loading && !preview.error && !preview.html
-					? React.createElement('div', { className: 'dfmg-empty' }, 'Select images or enter a saved gallery slug.')
-					: null
-			)
+			React.createElement(GalleryPreview, { attrs: attrs })
 		);
 	}
 
@@ -659,6 +705,9 @@
 		moduleLibrary.registerModule(metadata, {
 			defaultAttrs: defaultAttrs,
 			defaultPrintedStyleAttrs: {},
+			settings: {
+				content: SettingsContent
+			},
 			renderers: {
 				edit: Edit
 			}

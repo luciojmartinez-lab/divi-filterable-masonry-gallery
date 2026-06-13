@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ModuleContainer } from '@divi/module';
+import { ModuleContainer, ModuleGroups } from '@divi/module';
 
 import { ModuleScriptData } from './module-script-data';
 import { ModuleStyles } from './styles';
@@ -33,6 +33,14 @@ const parseIds = (value) => (
 	(String(value || '').match(/\d+/g) || [])
 		.map((id) => parseInt(id, 10))
 		.filter((id) => id > 0)
+);
+
+const moduleId = (props) => (
+	props.id || props.clientId || props.moduleId || props.blockId || props.block?.clientId || ''
+);
+
+const moduleAttrs = (props) => (
+	props.attrs || props.moduleAttrs || props.attributes || {}
 );
 
 const itemIds = (items) => (
@@ -97,6 +105,7 @@ const previewUrl = (params) => {
 const updateModuleAttrs = (props, values) => {
 	const payload = {};
 	const attempts = [];
+	const id = moduleId(props);
 	const wpData = window.wp?.data || window.top?.wp?.data;
 
 	Object.keys(values).forEach((key) => {
@@ -112,7 +121,7 @@ const updateModuleAttrs = (props, values) => {
 	].forEach((fn) => {
 		if (typeof fn === 'function') {
 			attempts.push(() => fn(payload));
-			attempts.push(() => fn(props.id, payload));
+			attempts.push(() => fn(id, payload));
 		}
 	});
 
@@ -120,18 +129,18 @@ const updateModuleAttrs = (props, values) => {
 		['setAttrs', 'setAttributes', 'updateAttrs', 'onUpdateAttrs'].forEach((name) => {
 			if (typeof props.actions[name] === 'function') {
 				attempts.push(() => props.actions[name](payload));
-				attempts.push(() => props.actions[name](props.id, payload));
+				attempts.push(() => props.actions[name](id, payload));
 			}
 		});
 	}
 
-	if (wpData && props.id) {
+	if (wpData && id) {
 		['core/block-editor', 'core/editor'].forEach((store) => {
 			attempts.push(() => {
 				const dispatch = wpData.dispatch(store);
 
 				if (dispatch?.updateBlockAttributes) {
-					dispatch.updateBlockAttributes(props.id, payload);
+					dispatch.updateBlockAttributes(id, payload);
 				}
 			});
 		});
@@ -146,17 +155,7 @@ const updateModuleAttrs = (props, values) => {
 	});
 };
 
-export const GalleryEdit = (props) => {
-	const {
-		attrs,
-		elements,
-		id,
-		name
-	} = props;
-
-	const attrGallery = attrValue(attrs, 'gallery', '');
-	const attrIds = attrValue(attrs, 'ids', '');
-	const [localIds, setLocalIds] = useState(null);
+const usePreview = (attrs, activeIds, activeGallery) => {
 	const [preview, setPreview] = useState({
 		html: '',
 		ids: '',
@@ -164,17 +163,8 @@ export const GalleryEdit = (props) => {
 		loading: true,
 		error: ''
 	});
-	const previewRef = useRef(null);
-	const dragIndexRef = useRef(null);
-	const attrKey = `${attrGallery}|${attrIds}`;
-	const activeIds = localIds !== null ? localIds : attrIds;
-	const activeGallery = localIds !== null ? '' : attrGallery;
 	const params = previewParams(attrs, activeIds, activeGallery);
 	const paramsKey = JSON.stringify(params);
-
-	useEffect(() => {
-		setLocalIds(null);
-	}, [attrKey]);
 
 	useEffect(() => {
 		const controller = window.AbortController ? new window.AbortController() : null;
@@ -231,11 +221,50 @@ export const GalleryEdit = (props) => {
 		};
 	}, [paramsKey]);
 
+	return preview;
+};
+
+const GalleryPreview = (props) => {
+	const attrs = moduleAttrs(props);
+	const previewRef = useRef(null);
+	const preview = usePreview(
+		attrs,
+		attrValue(attrs, 'ids', ''),
+		attrValue(attrs, 'gallery', '')
+	);
+
 	useEffect(() => {
 		if (previewRef.current && window.DFMGInitGalleries) {
 			window.DFMGInitGalleries(previewRef.current);
 		}
 	}, [preview.html]);
+
+	return (
+		<div className="dfmg-builder-preview" ref={previewRef}>
+			{preview.loading && <div className="dfmg-empty">Cargando previsualización...</div>}
+			{!preview.loading && preview.error && <div className="dfmg-empty">{preview.error}</div>}
+			{!preview.loading && !preview.error && preview.html && <div dangerouslySetInnerHTML={{ __html: preview.html }} />}
+			{!preview.loading && !preview.error && !preview.html && (
+				<div className="dfmg-empty">Selecciona imágenes o escribe un slug de galería guardada.</div>
+			)}
+		</div>
+	);
+};
+
+const GallerySelector = (props) => {
+	const attrs = moduleAttrs(props);
+	const attrGallery = attrValue(attrs, 'gallery', '');
+	const attrIds = attrValue(attrs, 'ids', '');
+	const [localIds, setLocalIds] = useState(null);
+	const dragIndexRef = useRef(null);
+	const attrKey = `${attrGallery}|${attrIds}`;
+	const activeIds = localIds !== null ? localIds : attrIds;
+	const activeGallery = localIds !== null ? '' : attrGallery;
+	const preview = usePreview(attrs, activeIds, activeGallery);
+
+	useEffect(() => {
+		setLocalIds(null);
+	}, [attrKey]);
 
 	const setDirectIds = (ids) => {
 		const value = ids.join(',');
@@ -264,9 +293,9 @@ export const GalleryEdit = (props) => {
 		}
 
 		const frame = apiWindow.wp.media({
-			title: 'Select gallery images',
+			title: 'Seleccionar imágenes de la galería',
 			button: {
-				text: 'Use selected images'
+				text: 'Usar imágenes seleccionadas'
 			},
 			library: {
 				type: 'image'
@@ -336,7 +365,43 @@ export const GalleryEdit = (props) => {
 				</button>
 			))}
 		</div>
-	) : null;
+	) : (
+		<p className="dfmg-builder-empty-note">No hay imágenes seleccionadas.</p>
+	);
+
+	return (
+		<div className="dfmg-builder-controls">
+			<div className="dfmg-builder-controls__bar">
+				<button className="dfmg-builder-button" type="button" onClick={openMediaFrame}>
+					Añadir/editar imágenes
+				</button>
+				<button className="dfmg-builder-button dfmg-builder-button--secondary" type="button" onClick={clearDirectSelection}>
+					Limpiar
+				</button>
+			</div>
+			<div className="dfmg-builder-count">
+				{preview.items.length}
+				{preview.items.length === 1 ? ' imagen' : ' imágenes'}
+			</div>
+			{thumbs}
+		</div>
+	);
+};
+
+export const SettingsContent = (props) => (
+	<>
+		<GallerySelector {...props} />
+		{props.groupConfiguration ? <ModuleGroups groups={props.groupConfiguration} /> : null}
+	</>
+);
+
+export const GalleryEdit = (props) => {
+	const {
+		elements,
+		id,
+		name
+	} = props;
+	const attrs = moduleAttrs(props);
 
 	return (
 		<ModuleContainer
@@ -351,26 +416,7 @@ export const GalleryEdit = (props) => {
 			{elements.styleComponents({
 				attrName: 'module'
 			})}
-			<div className="dfmg-builder-controls">
-				<div className="dfmg-builder-controls__bar">
-					<button className="dfmg-builder-button" type="button" onClick={openMediaFrame}>
-						{preview.items.length ? 'Edit images' : 'Select images'}
-					</button>
-					<button className="dfmg-builder-button dfmg-builder-button--secondary" type="button" onClick={clearDirectSelection}>
-						Clear
-					</button>
-					<span className="dfmg-builder-count">{preview.items.length} images</span>
-				</div>
-				{thumbs}
-			</div>
-			<div className="dfmg-builder-preview" ref={previewRef}>
-				{preview.loading && <div className="dfmg-empty">Loading gallery preview...</div>}
-				{!preview.loading && preview.error && <div className="dfmg-empty">{preview.error}</div>}
-				{!preview.loading && !preview.error && preview.html && <div dangerouslySetInnerHTML={{ __html: preview.html }} />}
-				{!preview.loading && !preview.error && !preview.html && (
-					<div className="dfmg-empty">Select images or enter a saved gallery slug.</div>
-				)}
-			</div>
+			<GalleryPreview attrs={attrs} />
 		</ModuleContainer>
 	);
 };
