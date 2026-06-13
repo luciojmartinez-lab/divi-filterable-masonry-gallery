@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.4 =
+Show saved-gallery images in the sidebar selector, append newly selected media instead of replacing the current selection, add per-image remove controls, and make the ID textarea compact below the visual selector.
 
 = 1.3.3 =
 Load the sidebar image selector in Divi's top Visual Builder window so it can attach to the settings panel where the Image IDs field is rendered.

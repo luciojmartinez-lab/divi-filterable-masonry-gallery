@@ -124,8 +124,15 @@
 }
 
 .dfmg-builder-controls--sidebar {
+	margin-top: 8px;
 	margin-bottom: 10px;
+	min-height: 106px;
 	padding: 8px;
+}
+
+.dfmg-builder-ids-field {
+	min-height: 44px !important;
+	height: 52px !important;
 }
 
 .dfmg-builder-controls__bar {
@@ -179,6 +186,7 @@
 	cursor: move;
 	overflow: hidden;
 	padding: 0;
+	position: relative;
 }
 
 .dfmg-builder-thumb:focus-visible {
@@ -192,6 +200,26 @@
 	height: 100%;
 	object-fit: cover;
 	width: 100%;
+}
+
+.dfmg-builder-thumb-remove {
+	align-items: center;
+	appearance: none;
+	background: rgba(17, 24, 39, 0.86);
+	border: 0;
+	border-radius: 999px;
+	color: #fff;
+	cursor: pointer;
+	display: flex;
+	font-size: 12px;
+	height: 18px;
+	justify-content: center;
+	line-height: 1;
+	padding: 0;
+	position: absolute;
+	right: 3px;
+	top: 3px;
+	width: 18px;
 }
 
 .dfmg-builder-preview {

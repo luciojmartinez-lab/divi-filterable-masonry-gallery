@@ -37,6 +37,22 @@ const itemIds = (items) => (
 		.filter((id) => id > 0)
 );
 
+const mergeIds = (existingIds, selectedIds) => {
+	const seen = {};
+	const merged = [];
+
+	existingIds.concat(selectedIds).forEach((id) => {
+		const numericId = parseInt(id, 10);
+
+		if (numericId > 0 && !seen[numericId]) {
+			seen[numericId] = true;
+			merged.push(numericId);
+		}
+	});
+
+	return merged;
+};
+
 const reorder = (list, from, to) => {
 	const copy = list.slice();
 	const moved = copy.splice(from, 1)[0];
@@ -107,6 +123,29 @@ const findFieldContainer = (field, label) => {
 	return field.parentElement;
 };
 
+const findSettingsRoot = (field) => {
+	let node = field.parentElement;
+	let fallback = field.parentElement;
+	let depth = 0;
+
+	while (node && node !== document.body && depth < 12) {
+		const text = (node.textContent || '').toLowerCase();
+
+		if (text.includes('image ids') && text.includes('saved gallery slug')) {
+			return node;
+		}
+
+		if (text.includes('image ids')) {
+			fallback = node;
+		}
+
+		node = node.parentElement;
+		depth += 1;
+	}
+
+	return fallback || document;
+};
+
 const fieldByLabel = (label, selector) => (
 	Array.from(document.querySelectorAll(selector)).find((field) => {
 		const container = findFieldContainer(field, label);
@@ -115,8 +154,16 @@ const fieldByLabel = (label, selector) => (
 	})
 );
 
-const fieldValueByLabel = (label, selector) => {
-	const match = fieldByLabel(label, selector);
+const fieldByLabelInRoot = (label, selector, root) => (
+	Array.from((root || document).querySelectorAll(selector)).find((field) => {
+		const container = findFieldContainer(field, label);
+
+		return container && (container.textContent || '').toLowerCase().includes(label.toLowerCase());
+	})
+);
+
+const fieldValueByLabel = (label, selector, root) => {
+	const match = root ? fieldByLabelInRoot(label, selector, root) : fieldByLabel(label, selector);
 
 	return match ? match.value : '';
 };
@@ -137,7 +184,7 @@ const setFieldValue = (field, value) => {
 
 const fetchItemsForField = (field, callback) => {
 	const ids = field.value || '';
-	const gallery = ids ? '' : fieldValueByLabel('Saved Gallery Slug', 'input');
+	const gallery = ids ? '' : (fieldValueByLabel('Saved Gallery Slug', 'input', findSettingsRoot(field)) || fieldValueByLabel('Saved Gallery Slug', 'input'));
 	const nonce = restNonce();
 
 	fetch(previewUrl({ gallery, ids }), {
@@ -169,6 +216,7 @@ const enhanceSidebarImageField = (field) => {
 	}
 
 	field.dataset.dfmgEnhanced = 'true';
+	field.classList.add('dfmg-builder-ids-field');
 	controls = document.createElement('div');
 	controls.className = 'dfmg-builder-controls dfmg-builder-controls--sidebar';
 	controls.innerHTML = [
@@ -181,7 +229,12 @@ const enhanceSidebarImageField = (field) => {
 		'<p class="dfmg-builder-empty-note" data-dfmg-panel-status></p>'
 	].join('');
 
-	field.parentNode.insertBefore(controls, field);
+	if (field.nextSibling) {
+		field.parentNode.insertBefore(controls, field.nextSibling);
+	} else {
+		field.parentNode.appendChild(controls);
+	}
+
 	thumbs = controls.querySelector('[data-dfmg-panel-thumbs]');
 	status = controls.querySelector('[data-dfmg-panel-status]');
 
@@ -201,16 +254,21 @@ const enhanceSidebarImageField = (field) => {
 		status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
 
 		items.forEach((item, index) => {
-			const button = document.createElement('button');
+			const button = document.createElement('div');
 			const image = document.createElement('img');
+			const remove = document.createElement('button');
 
 			button.className = 'dfmg-builder-thumb';
 			button.draggable = true;
-			button.type = 'button';
 			button.title = item.title || '';
 			image.src = item.thumb;
 			image.alt = item.alt || item.title || '';
+			remove.className = 'dfmg-builder-thumb-remove';
+			remove.type = 'button';
+			remove.textContent = '×';
+			remove.title = 'Quitar imagen';
 			button.appendChild(image);
+			button.appendChild(remove);
 
 			button.addEventListener('dragstart', (event) => {
 				dragIndex = index;
@@ -232,6 +290,12 @@ const enhanceSidebarImageField = (field) => {
 
 				dragIndex = null;
 				applyIds(itemIds(reordered));
+			});
+
+			remove.addEventListener('click', (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				applyIds(itemIds(items.filter((candidate) => candidate.id !== item.id)));
 			});
 
 			thumbs.appendChild(button);
@@ -278,7 +342,9 @@ const enhanceSidebarImageField = (field) => {
 		});
 
 		frame.on('select', () => {
-			applyIds(frame.state().get('selection').models.map((attachment) => attachment.get('id')));
+			const selectedIds = frame.state().get('selection').models.map((attachment) => attachment.get('id'));
+
+			applyIds(mergeIds(currentIds, selectedIds));
 		});
 
 		frame.open();
@@ -290,7 +356,7 @@ const enhanceSidebarImageField = (field) => {
 		applyIds([]);
 	});
 
-	slugField = fieldByLabel('Saved Gallery Slug', 'input');
+	slugField = fieldByLabelInRoot('Saved Gallery Slug', 'input', findSettingsRoot(field)) || fieldByLabel('Saved Gallery Slug', 'input');
 	if (slugField) {
 		slugField.addEventListener('input', refresh);
 		slugField.addEventListener('change', refresh);

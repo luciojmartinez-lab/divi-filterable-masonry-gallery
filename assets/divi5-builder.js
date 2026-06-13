@@ -281,6 +281,22 @@
 		});
 	}
 
+	function mergeIds(existingIds, selectedIds) {
+		var seen = {};
+		var merged = [];
+
+		existingIds.concat(selectedIds).forEach(function (id) {
+			var numericId = parseInt(id, 10);
+
+			if (numericId > 0 && !seen[numericId]) {
+				seen[numericId] = true;
+				merged.push(numericId);
+			}
+		});
+
+		return merged;
+	}
+
 	function reorder(list, from, to) {
 		var copy = list.slice();
 		var moved = copy.splice(from, 1)[0];
@@ -318,8 +334,42 @@
 		});
 	}
 
-	function fieldValueByLabel(label, selector) {
-		var match = fieldByLabel(label, selector);
+	function findSettingsRoot(field) {
+		var node = field.parentElement;
+		var fallback = field.parentElement;
+		var depth = 0;
+
+		while (node && node !== document.body && depth < 12) {
+			var text = (node.textContent || '').toLowerCase();
+
+			if (text.indexOf('image ids') !== -1 && text.indexOf('saved gallery slug') !== -1) {
+				return node;
+			}
+
+			if (text.indexOf('image ids') !== -1) {
+				fallback = node;
+			}
+
+			node = node.parentElement;
+			depth += 1;
+		}
+
+		return fallback || document;
+	}
+
+	function fieldByLabelInRoot(label, selector, root) {
+		var fields = Array.prototype.slice.call((root || document).querySelectorAll(selector));
+		var needle = label.toLowerCase();
+
+		return fields.find(function (field) {
+			var container = findFieldContainer(field, label);
+
+			return container && (container.textContent || '').toLowerCase().indexOf(needle) !== -1;
+		});
+	}
+
+	function fieldValueByLabel(label, selector, root) {
+		var match = root ? fieldByLabelInRoot(label, selector, root) : fieldByLabel(label, selector);
 
 		return match ? match.value : '';
 	}
@@ -340,7 +390,7 @@
 
 	function fetchItemsForField(field, callback) {
 		var ids = field.value || '';
-		var gallery = ids ? '' : fieldValueByLabel('Saved Gallery Slug', 'input');
+		var gallery = ids ? '' : (fieldValueByLabel('Saved Gallery Slug', 'input', findSettingsRoot(field)) || fieldValueByLabel('Saved Gallery Slug', 'input'));
 
 		window.fetch(previewUrl({ gallery: gallery, ids: ids }), {
 			credentials: 'same-origin',
@@ -372,6 +422,7 @@
 		}
 
 		field.dataset.dfmgEnhanced = 'true';
+		field.classList.add('dfmg-builder-ids-field');
 		controls = document.createElement('div');
 		controls.className = 'dfmg-builder-controls dfmg-builder-controls--sidebar';
 		controls.innerHTML = [
@@ -384,7 +435,12 @@
 			'<p class="dfmg-builder-empty-note" data-dfmg-panel-status></p>'
 		].join('');
 
-		field.parentNode.insertBefore(controls, field);
+		if (field.nextSibling) {
+			field.parentNode.insertBefore(controls, field.nextSibling);
+		} else {
+			field.parentNode.appendChild(controls);
+		}
+
 		thumbs = controls.querySelector('[data-dfmg-panel-thumbs]');
 		status = controls.querySelector('[data-dfmg-panel-status]');
 
@@ -404,16 +460,21 @@
 			status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
 
 			items.forEach(function (item, index) {
-				var button = document.createElement('button');
+				var button = document.createElement('div');
 				var image = document.createElement('img');
+				var remove = document.createElement('button');
 
 				button.className = 'dfmg-builder-thumb';
 				button.draggable = true;
-				button.type = 'button';
 				button.title = item.title || '';
 				image.src = item.thumb;
 				image.alt = item.alt || item.title || '';
+				remove.className = 'dfmg-builder-thumb-remove';
+				remove.type = 'button';
+				remove.textContent = '×';
+				remove.title = 'Quitar imagen';
 				button.appendChild(image);
+				button.appendChild(remove);
 
 				button.addEventListener('dragstart', function (event) {
 					dragIndex = index;
@@ -435,6 +496,14 @@
 					reordered = reorder(items, dragIndex, index);
 					dragIndex = null;
 					applyIds(itemIds(reordered));
+				});
+
+				remove.addEventListener('click', function (event) {
+					event.preventDefault();
+					event.stopPropagation();
+					applyIds(itemIds(items.filter(function (candidate) {
+						return candidate.id !== item.id;
+					})));
 				});
 
 				thumbs.appendChild(button);
@@ -482,9 +551,11 @@
 			});
 
 			frame.on('select', function () {
-				applyIds(frame.state().get('selection').models.map(function (attachment) {
+				var selectedIds = frame.state().get('selection').models.map(function (attachment) {
 					return attachment.get('id');
-				}));
+				});
+
+				applyIds(mergeIds(currentIds, selectedIds));
 			});
 
 			frame.open();
@@ -496,7 +567,7 @@
 			applyIds([]);
 		});
 
-		slugField = fieldByLabel('Saved Gallery Slug', 'input');
+		slugField = fieldByLabelInRoot('Saved Gallery Slug', 'input', findSettingsRoot(field)) || fieldByLabel('Saved Gallery Slug', 'input');
 		if (slugField) {
 			slugField.addEventListener('input', refresh);
 			slugField.addEventListener('change', refresh);
