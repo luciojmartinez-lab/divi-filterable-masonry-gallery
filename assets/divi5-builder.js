@@ -745,17 +745,7 @@
 			return [];
 		}
 
-		return allItems.sort(function (a, b) {
-			var rectA = a.getBoundingClientRect();
-			var rectB = b.getBoundingClientRect();
-			var topDiff = rectA.top - rectB.top;
-
-			if (Math.abs(topDiff) > 12) {
-				return topDiff;
-			}
-
-			return rectA.left - rectB.left;
-		});
+		return allItems;
 	}
 
 	function bindBuilderPreviewReorder(root) {
@@ -770,6 +760,7 @@
 		Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]')).forEach(function (item) {
 			item.draggable = true;
 			item.classList.add('dfmg-builder-preview-item');
+			item.title = 'Arrastra para ordenar';
 
 			item.addEventListener('dragstart', function (event) {
 				draggedItem = item;
@@ -810,7 +801,7 @@
 				}).filter(function (id) {
 					return id > 0;
 				});
-				var target = insertIndex;
+				var target = null;
 				var moved = null;
 
 				event.preventDefault();
@@ -826,9 +817,7 @@
 					return;
 				}
 
-				if (from < target) {
-					target -= 1;
-				}
+				target = insertIndex;
 
 				moved = ids.splice(from, 1)[0];
 				ids.splice(Math.max(0, Math.min(target, ids.length)), 0, moved);

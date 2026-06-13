@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.7 =
+Fix central Visual Builder drag placement so items keep the intended grid target, and show a move cursor while reordering gallery images.
 
 = 1.3.6 =
 Add Spanish dropdown controls for finite Divi 5 settings and make preview reordering use visual order for clearer drag placement.

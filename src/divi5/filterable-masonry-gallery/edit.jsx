@@ -526,17 +526,7 @@ const previewVisualItems = (grid) => {
 		return [];
 	}
 
-	return allItems.sort((a, b) => {
-		const rectA = a.getBoundingClientRect();
-		const rectB = b.getBoundingClientRect();
-		const topDiff = rectA.top - rectB.top;
-
-		if (Math.abs(topDiff) > 12) {
-			return topDiff;
-		}
-
-		return rectA.left - rectB.left;
-	});
+	return allItems;
 };
 
 const bindBuilderPreviewReorder = (root) => {
@@ -551,6 +541,7 @@ const bindBuilderPreviewReorder = (root) => {
 	Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]')).forEach((item) => {
 		item.draggable = true;
 		item.classList.add('dfmg-builder-preview-item');
+		item.title = 'Arrastra para ordenar';
 
 		item.addEventListener('dragstart', (event) => {
 			draggedItem = item;
@@ -604,9 +595,6 @@ const bindBuilderPreviewReorder = (root) => {
 			}
 
 			target = insertIndex;
-			if (from < target) {
-				target -= 1;
-			}
 
 			moved = ids.splice(from, 1)[0];
 			ids.splice(Math.max(0, Math.min(target, ids.length)), 0, moved);

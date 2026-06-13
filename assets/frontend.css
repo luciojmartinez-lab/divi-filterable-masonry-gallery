@@ -84,7 +84,11 @@
 }
 
 .dfmg-builder-preview-item {
-	cursor: grab;
+	cursor: move;
+}
+
+.dfmg-builder-preview-item * {
+	cursor: move;
 }
 
 .dfmg-builder-preview-item.is-dfmg-dragging,
