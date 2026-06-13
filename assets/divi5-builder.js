@@ -6,10 +6,7 @@
 	var moduleLibrary = divi.moduleLibrary || {};
 	var diviModule = divi.module || {};
 	var React = (window.vendor && window.vendor.React) || window.React;
-
-	if (!hooks || !moduleLibrary.registerModule || !React || !diviModule.ModuleContainer) {
-		return;
-	}
+	var canRegisterModule = hooks && moduleLibrary.registerModule && React && diviModule.ModuleContainer;
 
 	var metadata = {
 		name: 'dfmg/filterable-masonry-gallery',
@@ -252,73 +249,8 @@
 		});
 	}
 
-	function moduleId(props) {
-		return props.id || props.clientId || props.moduleId || props.blockId || (props.block && props.block.clientId) || '';
-	}
-
 	function moduleAttrs(props) {
 		return props.attrs || props.moduleAttrs || props.attributes || {};
-	}
-
-	function updateModuleAttrs(props, values) {
-		var payload = {};
-		var attempts = [];
-		var id = moduleId(props);
-		var wpData = window.wp && window.wp.data ? window.wp.data : (window.top && window.top.wp && window.top.wp.data ? window.top.wp.data : null);
-
-		Object.keys(values).forEach(function (key) {
-			payload[key] = valueAttr(values[key]);
-		});
-
-		[
-			props.setAttrs,
-			props.setAttributes,
-			props.updateAttrs,
-			props.onUpdateAttrs,
-			props.onChangeAttrs
-		].forEach(function (fn) {
-			if (typeof fn === 'function') {
-				attempts.push(function () {
-					fn(payload);
-				});
-				attempts.push(function () {
-					fn(id, payload);
-				});
-			}
-		});
-
-		if (props.actions) {
-			['setAttrs', 'setAttributes', 'updateAttrs', 'onUpdateAttrs'].forEach(function (name) {
-				if (typeof props.actions[name] === 'function') {
-					attempts.push(function () {
-						props.actions[name](payload);
-					});
-					attempts.push(function () {
-						props.actions[name](id, payload);
-					});
-				}
-			});
-		}
-
-		if (wpData && id) {
-			['core/block-editor', 'core/editor'].forEach(function (store) {
-				attempts.push(function () {
-					var dispatch = wpData.dispatch(store);
-
-					if (dispatch && typeof dispatch.updateBlockAttributes === 'function') {
-						dispatch.updateBlockAttributes(id, payload);
-					}
-				});
-			});
-		}
-
-		attempts.forEach(function (attempt) {
-			try {
-				attempt();
-			} catch (error) {
-				// Different Divi 5 builds expose different update callbacks.
-			}
-		});
 	}
 
 	function mediaWindow() {
@@ -356,6 +288,251 @@
 		copy.splice(to, 0, moved);
 
 		return copy;
+	}
+
+	function findFieldContainer(field, label) {
+		var node = field.parentElement;
+		var needle = label.toLowerCase();
+		var depth = 0;
+
+		while (node && node !== document.body && depth < 8) {
+			if ((node.textContent || '').toLowerCase().indexOf(needle) !== -1) {
+				return node;
+			}
+
+			node = node.parentElement;
+			depth += 1;
+		}
+
+		return field.parentElement;
+	}
+
+	function fieldByLabel(label, selector) {
+		var fields = Array.prototype.slice.call(document.querySelectorAll(selector));
+		var needle = label.toLowerCase();
+
+		return fields.find(function (field) {
+			var container = findFieldContainer(field, label);
+
+			return container && (container.textContent || '').toLowerCase().indexOf(needle) !== -1;
+		});
+	}
+
+	function fieldValueByLabel(label, selector) {
+		var match = fieldByLabel(label, selector);
+
+		return match ? match.value : '';
+	}
+
+	function setFieldValue(field, value) {
+		var prototype = field.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+		var descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+
+		if (descriptor && descriptor.set) {
+			descriptor.set.call(field, value);
+		} else {
+			field.value = value;
+		}
+
+		field.dispatchEvent(new window.Event('input', { bubbles: true }));
+		field.dispatchEvent(new window.Event('change', { bubbles: true }));
+	}
+
+	function fetchItemsForField(field, callback) {
+		var ids = field.value || '';
+		var gallery = ids ? '' : fieldValueByLabel('Saved Gallery Slug', 'input');
+
+		window.fetch(previewUrl({ gallery: gallery, ids: ids }), {
+			credentials: 'same-origin',
+			headers: restNonce() ? { 'X-WP-Nonce': restNonce() } : {}
+		}).then(function (response) {
+			if (!response.ok) {
+				throw new Error('No se pudo cargar la galería.');
+			}
+
+			return response.json();
+		}).then(function (data) {
+			callback(data.items || [], '');
+		}).catch(function (error) {
+			callback([], error && error.message ? error.message : 'No se pudo cargar la galería.');
+		});
+	}
+
+	function enhanceSidebarImageField(field) {
+		var container = findFieldContainer(field, 'Image IDs');
+		var controls = null;
+		var thumbs = null;
+		var status = null;
+		var slugField = null;
+		var items = [];
+		var dragIndex = null;
+
+		if (!container || field.dataset.dfmgEnhanced === 'true') {
+			return;
+		}
+
+		field.dataset.dfmgEnhanced = 'true';
+		controls = document.createElement('div');
+		controls.className = 'dfmg-builder-controls dfmg-builder-controls--sidebar';
+		controls.innerHTML = [
+			'<div class="dfmg-builder-controls__bar">',
+			'<button class="dfmg-builder-button" type="button" data-dfmg-panel-select>Añadir/editar imágenes</button>',
+			'<button class="dfmg-builder-button dfmg-builder-button--secondary" type="button" data-dfmg-panel-clear>Limpiar</button>',
+			'</div>',
+			'<div class="dfmg-builder-count" data-dfmg-panel-count>0 imágenes</div>',
+			'<div class="dfmg-builder-thumbs" data-dfmg-panel-thumbs></div>',
+			'<p class="dfmg-builder-empty-note" data-dfmg-panel-status></p>'
+		].join('');
+
+		field.parentNode.insertBefore(controls, field);
+		thumbs = controls.querySelector('[data-dfmg-panel-thumbs]');
+		status = controls.querySelector('[data-dfmg-panel-status]');
+
+		function applyIds(ids) {
+			if (slugField) {
+				setFieldValue(slugField, '');
+			}
+
+			setFieldValue(field, ids.join(','));
+			refresh();
+		}
+
+		function render(nextItems, message) {
+			items = nextItems;
+			controls.querySelector('[data-dfmg-panel-count]').textContent = items.length + (items.length === 1 ? ' imagen' : ' imágenes');
+			thumbs.innerHTML = '';
+			status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
+
+			items.forEach(function (item, index) {
+				var button = document.createElement('button');
+				var image = document.createElement('img');
+
+				button.className = 'dfmg-builder-thumb';
+				button.draggable = true;
+				button.type = 'button';
+				button.title = item.title || '';
+				image.src = item.thumb;
+				image.alt = item.alt || item.title || '';
+				button.appendChild(image);
+
+				button.addEventListener('dragstart', function (event) {
+					dragIndex = index;
+					event.dataTransfer.effectAllowed = 'move';
+				});
+
+				button.addEventListener('dragover', function (event) {
+					event.preventDefault();
+				});
+
+				button.addEventListener('drop', function (event) {
+					var reordered = null;
+
+					event.preventDefault();
+					if (dragIndex === null || dragIndex === index) {
+						return;
+					}
+
+					reordered = reorder(items, dragIndex, index);
+					dragIndex = null;
+					applyIds(itemIds(reordered));
+				});
+
+				thumbs.appendChild(button);
+			});
+		}
+
+		function refresh() {
+			status.textContent = 'Cargando imágenes...';
+			fetchItemsForField(field, render);
+		}
+
+		controls.querySelector('[data-dfmg-panel-select]').addEventListener('click', function (event) {
+			var apiWindow = mediaWindow();
+			var currentIds = parseIds(field.value || itemIds(items).join(','));
+			var frame = null;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			if (!apiWindow) {
+				status.textContent = 'El selector de medios de WordPress no está disponible.';
+				return;
+			}
+
+			frame = apiWindow.wp.media({
+				title: 'Seleccionar imágenes de la galería',
+				button: {
+					text: 'Usar imágenes seleccionadas'
+				},
+				library: {
+					type: 'image'
+				},
+				multiple: true
+			});
+
+			frame.on('open', function () {
+				var selection = frame.state().get('selection');
+
+				currentIds.forEach(function (id) {
+					var attachment = apiWindow.wp.media.attachment(id);
+
+					attachment.fetch();
+					selection.add(attachment);
+				});
+			});
+
+			frame.on('select', function () {
+				applyIds(frame.state().get('selection').models.map(function (attachment) {
+					return attachment.get('id');
+				}));
+			});
+
+			frame.open();
+		});
+
+		controls.querySelector('[data-dfmg-panel-clear]').addEventListener('click', function (event) {
+			event.preventDefault();
+			event.stopPropagation();
+			applyIds([]);
+		});
+
+		slugField = fieldByLabel('Saved Gallery Slug', 'input');
+		if (slugField) {
+			slugField.addEventListener('input', refresh);
+			slugField.addEventListener('change', refresh);
+		}
+
+		field.addEventListener('input', refresh);
+		refresh();
+	}
+
+	function initSidebarEnhancer() {
+		var observer = null;
+		var run = function () {
+			Array.prototype.slice.call(document.querySelectorAll('textarea')).forEach(function (field) {
+				var container = findFieldContainer(field, 'Image IDs');
+
+				if (container && (container.textContent || '').indexOf('Image IDs') !== -1) {
+					enhanceSidebarImageField(field);
+				}
+			});
+		};
+
+		run();
+
+		if (!window.MutationObserver || !document.body) {
+			return;
+		}
+
+		observer = new window.MutationObserver(function () {
+			window.clearTimeout(initSidebarEnhancer.timer);
+			initSidebarEnhancer.timer = window.setTimeout(run, 80);
+		});
+
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true
+		});
 	}
 
 	function moduleClassnames(params) {
@@ -504,182 +681,6 @@
 		);
 	}
 
-	function GallerySelector(props) {
-		var attrs = moduleAttrs(props);
-		var attrGallery = attrValue(attrs, 'gallery', '');
-		var attrIds = attrValue(attrs, 'ids', '');
-		var localIdsState = React.useState(null);
-		var localIds = localIdsState[0];
-		var setLocalIds = localIdsState[1];
-		var dragIndexRef = React.useRef(null);
-		var attrKey = attrGallery + '|' + attrIds;
-		var activeIds = localIds !== null ? localIds : attrIds;
-		var activeGallery = localIds !== null ? '' : attrGallery;
-		var preview = usePreview(attrs, activeIds, activeGallery);
-
-		React.useEffect(function () {
-			setLocalIds(null);
-		}, [attrKey]);
-
-		function setDirectIds(ids) {
-			var value = ids.join(',');
-
-			setLocalIds(value);
-			updateModuleAttrs(props, {
-				ids: value,
-				gallery: ''
-			});
-		}
-
-		function openMediaFrame(event) {
-			var apiWindow = mediaWindow();
-			var currentIds = parseIds(activeIds || preview.ids);
-			var frame = null;
-
-			event.preventDefault();
-			event.stopPropagation();
-
-			if (!apiWindow) {
-				setPreview({
-					html: preview.html,
-					ids: preview.ids,
-					items: preview.items,
-					loading: false,
-					error: 'The WordPress media picker is not available in this builder window.'
-				});
-				return;
-			}
-
-			frame = apiWindow.wp.media({
-				title: 'Seleccionar imágenes de la galería',
-				button: {
-					text: 'Usar imágenes seleccionadas'
-				},
-				library: {
-					type: 'image'
-				},
-				multiple: true
-			});
-
-			frame.on('open', function () {
-				var selection = frame.state().get('selection');
-
-				currentIds.forEach(function (id) {
-					var attachment = apiWindow.wp.media.attachment(id);
-
-					attachment.fetch();
-					selection.add(attachment);
-				});
-			});
-
-			frame.on('select', function () {
-				var selected = frame.state().get('selection').models.map(function (attachment) {
-					return attachment.get('id');
-				});
-
-				setDirectIds(selected);
-			});
-
-			frame.open();
-		}
-
-		function clearDirectSelection(event) {
-			event.preventDefault();
-			event.stopPropagation();
-			setDirectIds([]);
-		}
-
-		function onDrop(index, event) {
-			var from = dragIndexRef.current;
-			var reordered = null;
-
-			event.preventDefault();
-			event.stopPropagation();
-
-			if (from === null || from === index || !preview.items.length) {
-				return;
-			}
-
-			reordered = reorder(preview.items, from, index);
-			dragIndexRef.current = null;
-			setDirectIds(itemIds(reordered));
-		}
-
-		function renderThumbs() {
-			if (!preview.items.length) {
-				return React.createElement(
-					'p',
-					{ className: 'dfmg-builder-empty-note' },
-					'No hay imágenes seleccionadas.'
-				);
-			}
-
-			return React.createElement(
-				'div',
-				{ className: 'dfmg-builder-thumbs', 'aria-label': 'Selected images' },
-				preview.items.map(function (item, index) {
-					return React.createElement(
-						'button',
-						{
-							className: 'dfmg-builder-thumb',
-							draggable: true,
-							key: item.id,
-							onDragStart: function (event) {
-								dragIndexRef.current = index;
-								event.dataTransfer.effectAllowed = 'move';
-							},
-							onDragOver: function (event) {
-								event.preventDefault();
-							},
-							onDrop: function (event) {
-								onDrop(index, event);
-							},
-							title: item.title || '',
-							type: 'button'
-						},
-						React.createElement('img', { src: item.thumb, alt: item.alt || item.title || '' })
-					);
-				})
-			);
-		}
-
-		return React.createElement(
-			'div',
-			{ className: 'dfmg-builder-controls' },
-			React.createElement(
-				'div',
-				{ className: 'dfmg-builder-controls__bar' },
-				React.createElement(
-					'button',
-					{ className: 'dfmg-builder-button', type: 'button', onClick: openMediaFrame },
-					'Añadir/editar imágenes'
-				),
-				React.createElement(
-					'button',
-					{ className: 'dfmg-builder-button dfmg-builder-button--secondary', type: 'button', onClick: clearDirectSelection },
-					'Limpiar'
-				)
-			),
-			React.createElement(
-				'div',
-				{ className: 'dfmg-builder-count' },
-				preview.items.length + (1 === preview.items.length ? ' imagen' : ' imágenes')
-			),
-			renderThumbs()
-		);
-	}
-
-	function SettingsContent(props) {
-		return React.createElement(
-			React.Fragment,
-			null,
-			React.createElement(GallerySelector, props),
-			diviModule.ModuleGroups && props.groupConfiguration
-				? React.createElement(diviModule.ModuleGroups, { groups: props.groupConfiguration })
-				: null
-		);
-	}
-
 	function Edit(props) {
 		var attrs = moduleAttrs(props);
 
@@ -701,16 +702,21 @@
 		);
 	}
 
-	hooks.addAction('divi.moduleLibrary.registerModuleLibraryStore.after', 'dfmg/filterable-masonry-gallery', function () {
-		moduleLibrary.registerModule(metadata, {
-			defaultAttrs: defaultAttrs,
-			defaultPrintedStyleAttrs: {},
-			settings: {
-				content: SettingsContent
-			},
-			renderers: {
-				edit: Edit
-			}
+	if (canRegisterModule) {
+		hooks.addAction('divi.moduleLibrary.registerModuleLibraryStore.after', 'dfmg/filterable-masonry-gallery', function () {
+			moduleLibrary.registerModule(metadata, {
+				defaultAttrs: defaultAttrs,
+				defaultPrintedStyleAttrs: {},
+				renderers: {
+					edit: Edit
+				}
+			});
 		});
-	});
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initSidebarEnhancer);
+	} else {
+		initSidebarEnhancer();
+	}
 }());

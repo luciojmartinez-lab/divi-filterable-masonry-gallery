@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ModuleContainer, ModuleGroups } from '@divi/module';
+import { ModuleContainer } from '@divi/module';
 
 import { ModuleScriptData } from './module-script-data';
 import { ModuleStyles } from './styles';
@@ -8,14 +8,6 @@ import { moduleClassnames } from './module-classnames';
 const attrValue = (attrs, key, fallback) => (
 	attrs?.[key]?.innerContent?.desktop?.value ?? fallback
 );
-
-const valueAttr = (value) => ({
-	innerContent: {
-		desktop: {
-			value
-		}
-	}
-});
 
 const restRoot = () => {
 	const settings = window.wpApiSettings || window.top?.wpApiSettings;
@@ -33,10 +25,6 @@ const parseIds = (value) => (
 	(String(value || '').match(/\d+/g) || [])
 		.map((id) => parseInt(id, 10))
 		.filter((id) => id > 0)
-);
-
-const moduleId = (props) => (
-	props.id || props.clientId || props.moduleId || props.blockId || props.block?.clientId || ''
 );
 
 const moduleAttrs = (props) => (
@@ -102,56 +90,241 @@ const previewUrl = (params) => {
 	return `${restRoot()}/dfmg/v1/preview?${query}`;
 };
 
-const updateModuleAttrs = (props, values) => {
-	const payload = {};
-	const attempts = [];
-	const id = moduleId(props);
-	const wpData = window.wp?.data || window.top?.wp?.data;
+const findFieldContainer = (field, label) => {
+	let node = field.parentElement;
+	const needle = label.toLowerCase();
+	let depth = 0;
 
-	Object.keys(values).forEach((key) => {
-		payload[key] = valueAttr(values[key]);
-	});
-
-	[
-		props.setAttrs,
-		props.setAttributes,
-		props.updateAttrs,
-		props.onUpdateAttrs,
-		props.onChangeAttrs
-	].forEach((fn) => {
-		if (typeof fn === 'function') {
-			attempts.push(() => fn(payload));
-			attempts.push(() => fn(id, payload));
+	while (node && node !== document.body && depth < 8) {
+		if ((node.textContent || '').toLowerCase().includes(needle)) {
+			return node;
 		}
-	});
 
-	if (props.actions) {
-		['setAttrs', 'setAttributes', 'updateAttrs', 'onUpdateAttrs'].forEach((name) => {
-			if (typeof props.actions[name] === 'function') {
-				attempts.push(() => props.actions[name](payload));
-				attempts.push(() => props.actions[name](id, payload));
-			}
-		});
+		node = node.parentElement;
+		depth += 1;
 	}
 
-	if (wpData && id) {
-		['core/block-editor', 'core/editor'].forEach((store) => {
-			attempts.push(() => {
-				const dispatch = wpData.dispatch(store);
+	return field.parentElement;
+};
 
-				if (dispatch?.updateBlockAttributes) {
-					dispatch.updateBlockAttributes(id, payload);
+const fieldByLabel = (label, selector) => (
+	Array.from(document.querySelectorAll(selector)).find((field) => {
+		const container = findFieldContainer(field, label);
+
+		return container && (container.textContent || '').toLowerCase().includes(label.toLowerCase());
+	})
+);
+
+const fieldValueByLabel = (label, selector) => {
+	const match = fieldByLabel(label, selector);
+
+	return match ? match.value : '';
+};
+
+const setFieldValue = (field, value) => {
+	const prototype = field.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+	const descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+
+	if (descriptor?.set) {
+		descriptor.set.call(field, value);
+	} else {
+		field.value = value;
+	}
+
+	field.dispatchEvent(new window.Event('input', { bubbles: true }));
+	field.dispatchEvent(new window.Event('change', { bubbles: true }));
+};
+
+const fetchItemsForField = (field, callback) => {
+	const ids = field.value || '';
+	const gallery = ids ? '' : fieldValueByLabel('Saved Gallery Slug', 'input');
+	const nonce = restNonce();
+
+	fetch(previewUrl({ gallery, ids }), {
+		credentials: 'same-origin',
+		headers: nonce ? { 'X-WP-Nonce': nonce } : {}
+	})
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error('No se pudo cargar la galería.');
+			}
+
+			return response.json();
+		})
+		.then((data) => callback(data.items || [], ''))
+		.catch((error) => callback([], error?.message || 'No se pudo cargar la galería.'));
+};
+
+const enhanceSidebarImageField = (field) => {
+	const container = findFieldContainer(field, 'Image IDs');
+	let controls = null;
+	let thumbs = null;
+	let status = null;
+	let slugField = null;
+	let items = [];
+	let dragIndex = null;
+
+	if (!container || field.dataset.dfmgEnhanced === 'true') {
+		return;
+	}
+
+	field.dataset.dfmgEnhanced = 'true';
+	controls = document.createElement('div');
+	controls.className = 'dfmg-builder-controls dfmg-builder-controls--sidebar';
+	controls.innerHTML = [
+		'<div class="dfmg-builder-controls__bar">',
+		'<button class="dfmg-builder-button" type="button" data-dfmg-panel-select>Añadir/editar imágenes</button>',
+		'<button class="dfmg-builder-button dfmg-builder-button--secondary" type="button" data-dfmg-panel-clear>Limpiar</button>',
+		'</div>',
+		'<div class="dfmg-builder-count" data-dfmg-panel-count>0 imágenes</div>',
+		'<div class="dfmg-builder-thumbs" data-dfmg-panel-thumbs></div>',
+		'<p class="dfmg-builder-empty-note" data-dfmg-panel-status></p>'
+	].join('');
+
+	field.parentNode.insertBefore(controls, field);
+	thumbs = controls.querySelector('[data-dfmg-panel-thumbs]');
+	status = controls.querySelector('[data-dfmg-panel-status]');
+
+	const applyIds = (ids) => {
+		if (slugField) {
+			setFieldValue(slugField, '');
+		}
+
+		setFieldValue(field, ids.join(','));
+		refresh();
+	};
+
+	const render = (nextItems, message) => {
+		items = nextItems;
+		controls.querySelector('[data-dfmg-panel-count]').textContent = `${items.length}${items.length === 1 ? ' imagen' : ' imágenes'}`;
+		thumbs.innerHTML = '';
+		status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
+
+		items.forEach((item, index) => {
+			const button = document.createElement('button');
+			const image = document.createElement('img');
+
+			button.className = 'dfmg-builder-thumb';
+			button.draggable = true;
+			button.type = 'button';
+			button.title = item.title || '';
+			image.src = item.thumb;
+			image.alt = item.alt || item.title || '';
+			button.appendChild(image);
+
+			button.addEventListener('dragstart', (event) => {
+				dragIndex = index;
+				event.dataTransfer.effectAllowed = 'move';
+			});
+
+			button.addEventListener('dragover', (event) => {
+				event.preventDefault();
+			});
+
+			button.addEventListener('drop', (event) => {
+				event.preventDefault();
+
+				if (dragIndex === null || dragIndex === index) {
+					return;
 				}
+
+				const reordered = reorder(items, dragIndex, index);
+
+				dragIndex = null;
+				applyIds(itemIds(reordered));
+			});
+
+			thumbs.appendChild(button);
+		});
+	};
+
+	function refresh() {
+		status.textContent = 'Cargando imágenes...';
+		fetchItemsForField(field, render);
+	}
+
+	controls.querySelector('[data-dfmg-panel-select]').addEventListener('click', (event) => {
+		const apiWindow = mediaWindow();
+		const currentIds = parseIds(field.value || itemIds(items).join(','));
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!apiWindow) {
+			status.textContent = 'El selector de medios de WordPress no está disponible.';
+			return;
+		}
+
+		const frame = apiWindow.wp.media({
+			title: 'Seleccionar imágenes de la galería',
+			button: {
+				text: 'Usar imágenes seleccionadas'
+			},
+			library: {
+				type: 'image'
+			},
+			multiple: true
+		});
+
+		frame.on('open', () => {
+			const selection = frame.state().get('selection');
+
+			currentIds.forEach((id) => {
+				const attachment = apiWindow.wp.media.attachment(id);
+
+				attachment.fetch();
+				selection.add(attachment);
 			});
 		});
+
+		frame.on('select', () => {
+			applyIds(frame.state().get('selection').models.map((attachment) => attachment.get('id')));
+		});
+
+		frame.open();
+	});
+
+	controls.querySelector('[data-dfmg-panel-clear]').addEventListener('click', (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		applyIds([]);
+	});
+
+	slugField = fieldByLabel('Saved Gallery Slug', 'input');
+	if (slugField) {
+		slugField.addEventListener('input', refresh);
+		slugField.addEventListener('change', refresh);
 	}
 
-	attempts.forEach((attempt) => {
-		try {
-			attempt();
-		} catch (error) {
-			// Divi 5 builds expose different update callbacks while the API evolves.
-		}
+	field.addEventListener('input', refresh);
+	refresh();
+};
+
+export const initSidebarEnhancer = () => {
+	const run = () => {
+		Array.from(document.querySelectorAll('textarea')).forEach((field) => {
+			const container = findFieldContainer(field, 'Image IDs');
+
+			if (container && (container.textContent || '').includes('Image IDs')) {
+				enhanceSidebarImageField(field);
+			}
+		});
+	};
+
+	run();
+
+	if (!window.MutationObserver || !document.body) {
+		return;
+	}
+
+	const observer = new window.MutationObserver(() => {
+		window.clearTimeout(initSidebarEnhancer.timer);
+		initSidebarEnhancer.timer = window.setTimeout(run, 80);
+	});
+
+	observer.observe(document.body, {
+		childList: true,
+		subtree: true
 	});
 };
 
@@ -250,150 +423,6 @@ const GalleryPreview = (props) => {
 		</div>
 	);
 };
-
-const GallerySelector = (props) => {
-	const attrs = moduleAttrs(props);
-	const attrGallery = attrValue(attrs, 'gallery', '');
-	const attrIds = attrValue(attrs, 'ids', '');
-	const [localIds, setLocalIds] = useState(null);
-	const dragIndexRef = useRef(null);
-	const attrKey = `${attrGallery}|${attrIds}`;
-	const activeIds = localIds !== null ? localIds : attrIds;
-	const activeGallery = localIds !== null ? '' : attrGallery;
-	const preview = usePreview(attrs, activeIds, activeGallery);
-
-	useEffect(() => {
-		setLocalIds(null);
-	}, [attrKey]);
-
-	const setDirectIds = (ids) => {
-		const value = ids.join(',');
-
-		setLocalIds(value);
-		updateModuleAttrs(props, {
-			ids: value,
-			gallery: ''
-		});
-	};
-
-	const openMediaFrame = (event) => {
-		const apiWindow = mediaWindow();
-		const currentIds = parseIds(activeIds || preview.ids);
-
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (!apiWindow) {
-			setPreview({
-				...preview,
-				loading: false,
-				error: 'The WordPress media picker is not available in this builder window.'
-			});
-			return;
-		}
-
-		const frame = apiWindow.wp.media({
-			title: 'Seleccionar imágenes de la galería',
-			button: {
-				text: 'Usar imágenes seleccionadas'
-			},
-			library: {
-				type: 'image'
-			},
-			multiple: true
-		});
-
-		frame.on('open', () => {
-			const selection = frame.state().get('selection');
-
-			currentIds.forEach((id) => {
-				const attachment = apiWindow.wp.media.attachment(id);
-
-				attachment.fetch();
-				selection.add(attachment);
-			});
-		});
-
-		frame.on('select', () => {
-			const selected = frame.state().get('selection').models.map((attachment) => attachment.get('id'));
-
-			setDirectIds(selected);
-		});
-
-		frame.open();
-	};
-
-	const clearDirectSelection = (event) => {
-		event.preventDefault();
-		event.stopPropagation();
-		setDirectIds([]);
-	};
-
-	const onDrop = (index, event) => {
-		const from = dragIndexRef.current;
-
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (from === null || from === index || !preview.items.length) {
-			return;
-		}
-
-		dragIndexRef.current = null;
-		setDirectIds(itemIds(reorder(preview.items, from, index)));
-	};
-
-	const thumbs = preview.items.length ? (
-		<div className="dfmg-builder-thumbs" aria-label="Selected images">
-			{preview.items.map((item, index) => (
-				<button
-					className="dfmg-builder-thumb"
-					draggable
-					key={item.id}
-					onDragStart={(event) => {
-						dragIndexRef.current = index;
-						event.dataTransfer.effectAllowed = 'move';
-					}}
-					onDragOver={(event) => {
-						event.preventDefault();
-					}}
-					onDrop={(event) => onDrop(index, event)}
-					title={item.title || ''}
-					type="button"
-				>
-					<img src={item.thumb} alt={item.alt || item.title || ''} />
-				</button>
-			))}
-		</div>
-	) : (
-		<p className="dfmg-builder-empty-note">No hay imágenes seleccionadas.</p>
-	);
-
-	return (
-		<div className="dfmg-builder-controls">
-			<div className="dfmg-builder-controls__bar">
-				<button className="dfmg-builder-button" type="button" onClick={openMediaFrame}>
-					Añadir/editar imágenes
-				</button>
-				<button className="dfmg-builder-button dfmg-builder-button--secondary" type="button" onClick={clearDirectSelection}>
-					Limpiar
-				</button>
-			</div>
-			<div className="dfmg-builder-count">
-				{preview.items.length}
-				{preview.items.length === 1 ? ' imagen' : ' imágenes'}
-			</div>
-			{thumbs}
-		</div>
-	);
-};
-
-export const SettingsContent = (props) => (
-	<>
-		<GallerySelector {...props} />
-		{props.groupConfiguration ? <ModuleGroups groups={props.groupConfiguration} /> : null}
-	</>
-);
 
 export const GalleryEdit = (props) => {
 	const {
