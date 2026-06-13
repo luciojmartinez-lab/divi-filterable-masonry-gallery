@@ -19,19 +19,19 @@
 		category: 'module',
 		attributes: {
 			module: moduleAttribute(),
-			gallery: fieldAttribute('gallery', 'Saved Gallery Slug', '', 'contentGallery', 10, 'divi/text', 'Use a saved Masonry Gallery slug, for example mi-galeria.'),
-			ids: fieldAttribute('ids', 'Image IDs', '', 'contentGallery', 20, 'divi/textarea', 'Optional comma-separated attachment IDs. Use the visual selector above to choose and reorder images.'),
-			columns: fieldAttribute('columns', 'Desktop Columns', '3', 'layoutGallery', 10, 'divi/text', ''),
-			tabletColumns: fieldAttribute('tabletColumns', 'Tablet Columns', '2', 'layoutGallery', 20, 'divi/text', ''),
-			mobileColumns: fieldAttribute('mobileColumns', 'Mobile Columns', '1', 'layoutGallery', 30, 'divi/text', ''),
-			gap: fieldAttribute('gap', 'Gap', '18', 'layoutGallery', 40, 'divi/text', 'Pixel gap between images.'),
-			showFilters: fieldAttribute('showFilters', 'Show Filters', 'on', 'displayGallery', 10, 'divi/text', 'Use on or off.'),
-			filterAllLabel: fieldAttribute('filterAllLabel', 'All Label', 'All', 'displayGallery', 20, 'divi/text', ''),
-			includeTerms: fieldAttribute('includeTerms', 'Limit Filters', '', 'displayGallery', 30, 'divi/text', 'Optional comma-separated Gallery Filter slugs.'),
-			imageSize: fieldAttribute('imageSize', 'Image Size', 'large', 'displayGallery', 40, 'divi/text', 'thumbnail, medium, large, or full.'),
-			showCaptions: fieldAttribute('showCaptions', 'Show Captions', 'on', 'displayGallery', 50, 'divi/text', 'Use on or off.'),
-			captionSource: fieldAttribute('captionSource', 'Caption Source', 'caption', 'displayGallery', 60, 'divi/text', 'caption, title, alt, or none.'),
-			linkBehavior: fieldAttribute('linkBehavior', 'Click Action', 'lightbox', 'displayGallery', 70, 'divi/text', 'lightbox, file, attachment, or none.')
+			gallery: fieldAttribute('gallery', 'Slug de galería guardada', '', 'contentGallery', 10, 'divi/text', 'Usa el slug de una galería guardada, por ejemplo mi-galeria.'),
+			ids: fieldAttribute('ids', 'IDs de imagen', '', 'contentGallery', 20, 'divi/textarea', 'IDs de adjuntos separados por comas. Usa el selector visual para elegir y ordenar imágenes.'),
+			columns: fieldAttribute('columns', 'Columnas escritorio', '3', 'layoutGallery', 10, 'divi/text', ''),
+			tabletColumns: fieldAttribute('tabletColumns', 'Columnas tablet', '2', 'layoutGallery', 20, 'divi/text', ''),
+			mobileColumns: fieldAttribute('mobileColumns', 'Columnas móvil', '1', 'layoutGallery', 30, 'divi/text', ''),
+			gap: fieldAttribute('gap', 'Separación', '18', 'layoutGallery', 40, 'divi/text', 'Separación en píxeles entre imágenes.'),
+			showFilters: fieldAttribute('showFilters', 'Mostrar filtros', 'on', 'displayGallery', 10, 'divi/text', 'Elige Sí o No.'),
+			filterAllLabel: fieldAttribute('filterAllLabel', 'Etiqueta Todos', 'All', 'displayGallery', 20, 'divi/text', ''),
+			includeTerms: fieldAttribute('includeTerms', 'Limitar filtros', '', 'displayGallery', 30, 'divi/text', 'Slugs de filtros separados por comas. Déjalo vacío para mostrar todos.'),
+			imageSize: fieldAttribute('imageSize', 'Tamaño de imagen', 'large', 'displayGallery', 40, 'divi/text', 'Tamaño de imagen usado en la galería.'),
+			showCaptions: fieldAttribute('showCaptions', 'Mostrar leyendas', 'on', 'displayGallery', 50, 'divi/text', 'Elige Sí o No.'),
+			captionSource: fieldAttribute('captionSource', 'Fuente de leyenda', 'caption', 'displayGallery', 60, 'divi/text', 'Origen del texto mostrado bajo cada imagen.'),
+			linkBehavior: fieldAttribute('linkBehavior', 'Acción al hacer clic', 'lightbox', 'displayGallery', 70, 'divi/text', 'Qué ocurre al hacer clic en una imagen.')
 		},
 		customCssFields: {
 			gallery: {
@@ -56,9 +56,9 @@
 			design: 'auto',
 			advanced: 'auto',
 			groups: {
-				contentGallery: group('content', 10, 'contentGallery', 'Gallery'),
-				layoutGallery: group('content', 20, 'layoutGallery', 'Layout'),
-				displayGallery: group('content', 30, 'displayGallery', 'Display')
+				contentGallery: group('content', 10, 'contentGallery', 'Galería'),
+				layoutGallery: group('content', 20, 'layoutGallery', 'Diseño'),
+				displayGallery: group('content', 30, 'displayGallery', 'Visualización')
 			}
 		}
 	};
@@ -701,8 +701,12 @@
 
 	function applyIdsToActiveSettings(ids) {
 		var doc = targetDocument();
-		var idsField = doc.querySelector('textarea.dfmg-builder-ids-field') || fieldByLabelInDocument('Image IDs', 'textarea', doc);
-		var slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc);
+		var idsField = doc.querySelector('textarea.dfmg-builder-ids-field')
+			|| fieldByLabelInDocument('Image IDs', 'textarea', doc)
+			|| fieldByLabelInDocument('IDs de imagen', 'textarea', doc);
+		var slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc)
+			|| fieldByLabelInDocument('Slug de galería guardada', 'input', doc)
+			|| fieldByLabelInDocument('Slug de galeria guardada', 'input', doc);
 
 		if (!idsField) {
 			return false;
@@ -730,6 +734,28 @@
 		item.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
 
 		return index + (after ? 1 : 0);
+	}
+
+	function previewVisualItems(grid) {
+		var allItems = Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]'));
+
+		if (allItems.some(function (item) {
+			return item.classList.contains('is-hidden');
+		})) {
+			return [];
+		}
+
+		return allItems.sort(function (a, b) {
+			var rectA = a.getBoundingClientRect();
+			var rectB = b.getBoundingClientRect();
+			var topDiff = rectA.top - rectB.top;
+
+			if (Math.abs(topDiff) > 12) {
+				return topDiff;
+			}
+
+			return rectA.left - rectB.left;
+		});
 	}
 
 	function bindBuilderPreviewReorder(root) {
@@ -762,7 +788,7 @@
 			});
 
 			item.addEventListener('dragover', function (event) {
-				var items = Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+				var items = previewVisualItems(grid);
 				var index = items.indexOf(item);
 
 				if (!draggedItem || index === -1) {
@@ -775,7 +801,7 @@
 			});
 
 			item.addEventListener('drop', function (event) {
-				var items = Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+				var items = previewVisualItems(grid);
 				var from = items.indexOf(draggedItem);
 				var index = items.indexOf(item);
 				var insertIndex = null;

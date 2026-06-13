@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,7 @@ The plugin includes:
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
-* Frontend filtering, CSS masonry-style layout, lazy-loaded images, captions, and a small lightbox.
+* Frontend filtering, row-ordered masonry layout, lazy-loaded images, captions, and a small lightbox.
 
 == Installation ==
 
@@ -68,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.6 =
+Add Spanish dropdown controls for finite Divi 5 settings and make preview reordering use visual order for clearer drag placement.
 
 = 1.3.5 =
 Switch frontend masonry from CSS columns to a row-ordered JavaScript layout, add drag insertion indicators, and allow direct reordering from the Divi preview canvas.

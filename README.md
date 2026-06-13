@@ -12,7 +12,7 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 - Saved Masonry Galleries with a WordPress media picker and reusable slugs.
 - Gallery Filters taxonomy for images in the Media Library.
 - Frontend filtering by media terms.
-- Masonry-style layout using CSS columns for stable Divi rendering.
+- Row-ordered masonry layout with Visual Builder reordering controls.
 - Responsive desktop, tablet, and mobile column controls.
 - Captions from media caption, title, or alt text.
 - Lightweight built-in lightbox.
@@ -72,7 +72,7 @@ npm run build
 Package the `divi-filterable-masonry-gallery` folder as a ZIP for installation:
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.5.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.6.zip -Force
 ```
 
 ## License

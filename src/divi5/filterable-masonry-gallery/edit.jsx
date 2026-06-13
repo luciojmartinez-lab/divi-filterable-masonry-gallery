@@ -484,8 +484,12 @@ const setExternalFieldValue = (field, value) => {
 
 const applyIdsToActiveSettings = (ids) => {
 	const doc = targetDocument();
-	const idsField = doc.querySelector('textarea.dfmg-builder-ids-field') || fieldByLabelInDocument('Image IDs', 'textarea', doc);
-	const slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc);
+	const idsField = doc.querySelector('textarea.dfmg-builder-ids-field')
+		|| fieldByLabelInDocument('Image IDs', 'textarea', doc)
+		|| fieldByLabelInDocument('IDs de imagen', 'textarea', doc);
+	const slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc)
+		|| fieldByLabelInDocument('Slug de galería guardada', 'input', doc)
+		|| fieldByLabelInDocument('Slug de galeria guardada', 'input', doc);
 
 	if (!idsField) {
 		return false;
@@ -513,6 +517,26 @@ const previewInsertionIndexFor = (root, item, index, event) => {
 	item.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
 
 	return index + (after ? 1 : 0);
+};
+
+const previewVisualItems = (grid) => {
+	const allItems = Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]'));
+
+	if (allItems.some((item) => item.classList.contains('is-hidden'))) {
+		return [];
+	}
+
+	return allItems.sort((a, b) => {
+		const rectA = a.getBoundingClientRect();
+		const rectB = b.getBoundingClientRect();
+		const topDiff = rectA.top - rectB.top;
+
+		if (Math.abs(topDiff) > 12) {
+			return topDiff;
+		}
+
+		return rectA.left - rectB.left;
+	});
 };
 
 const bindBuilderPreviewReorder = (root) => {
@@ -545,7 +569,7 @@ const bindBuilderPreviewReorder = (root) => {
 		});
 
 		item.addEventListener('dragover', (event) => {
-			const items = Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+			const items = previewVisualItems(grid);
 			const index = items.indexOf(item);
 
 			if (!draggedItem || index === -1) {
@@ -558,7 +582,7 @@ const bindBuilderPreviewReorder = (root) => {
 		});
 
 		item.addEventListener('drop', (event) => {
-			const items = Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+			const items = previewVisualItems(grid);
 			const from = items.indexOf(draggedItem);
 			const index = items.indexOf(item);
 			const ids = items.map((candidate) => parseInt(candidate.getAttribute('data-dfmg-id'), 10)).filter((id) => id > 0);

@@ -3,6 +3,95 @@
 
 	var imageIdLabels = ['Image IDs', 'IDs de imagen', 'ID de imagen'];
 	var gallerySlugLabels = ['Saved Gallery Slug', 'Slug de galería guardada', 'Slug de galeria guardada'];
+	var selectFieldSpecs = [
+		{
+			labels: ['Desktop Columns', 'Columnas escritorio', 'Columnas de escritorio'],
+			options: [
+				['1', '1 columna'],
+				['2', '2 columnas'],
+				['3', '3 columnas'],
+				['4', '4 columnas'],
+				['5', '5 columnas'],
+				['6', '6 columnas']
+			]
+		},
+		{
+			labels: ['Tablet Columns', 'Columnas tablet'],
+			options: [
+				['1', '1 columna'],
+				['2', '2 columnas'],
+				['3', '3 columnas'],
+				['4', '4 columnas']
+			]
+		},
+		{
+			labels: ['Mobile Columns', 'Columnas móvil', 'Columnas movil'],
+			options: [
+				['1', '1 columna'],
+				['2', '2 columnas'],
+				['3', '3 columnas']
+			]
+		},
+		{
+			labels: ['Gap', 'Separación', 'Espacio'],
+			options: [
+				['0', '0 px'],
+				['4', '4 px'],
+				['8', '8 px'],
+				['12', '12 px'],
+				['16', '16 px'],
+				['18', '18 px'],
+				['20', '20 px'],
+				['24', '24 px'],
+				['32', '32 px'],
+				['40', '40 px'],
+				['48', '48 px'],
+				['64', '64 px'],
+				['80', '80 px']
+			]
+		},
+		{
+			labels: ['Show Filters', 'Mostrar filtros'],
+			options: [
+				['on', 'Sí'],
+				['off', 'No']
+			]
+		},
+		{
+			labels: ['Image Size', 'Tamaño de imagen'],
+			options: [
+				['thumbnail', 'Miniatura'],
+				['medium', 'Mediana'],
+				['large', 'Grande'],
+				['full', 'Completa']
+			]
+		},
+		{
+			labels: ['Show Captions', 'Mostrar leyendas', 'Mostrar pies de foto'],
+			options: [
+				['on', 'Sí'],
+				['off', 'No']
+			]
+		},
+		{
+			labels: ['Caption Source', 'Fuente de leyenda', 'Fuente del pie'],
+			options: [
+				['caption', 'Leyenda del medio'],
+				['title', 'Título'],
+				['alt', 'Texto alternativo'],
+				['none', 'Ninguna']
+			]
+		},
+		{
+			labels: ['Click Action', 'Acción al hacer clic'],
+			options: [
+				['lightbox', 'Abrir lightbox'],
+				['file', 'Abrir archivo de imagen'],
+				['attachment', 'Abrir página del adjunto'],
+				['none', 'Sin enlace']
+			]
+		}
+	];
 
 	function textIncludesAny(text, labels) {
 		var haystack = String(text || '').toLowerCase();
@@ -164,6 +253,30 @@
 		});
 	}
 
+	function fieldByLabelsScoped(labels, selector, root) {
+		var fields = Array.prototype.slice.call((root || document).querySelectorAll(selector));
+		var match = null;
+
+		fields.some(function (field) {
+			var node = field.parentElement;
+			var depth = 0;
+
+			while (node && node !== document.body && depth < 8) {
+				if (textIncludesAny(node.textContent, labels) && node.querySelectorAll('input, textarea, select').length <= 2) {
+					match = field;
+					return true;
+				}
+
+				node = node.parentElement;
+				depth += 1;
+			}
+
+			return false;
+		});
+
+		return match;
+	}
+
 	function fieldValueByLabels(labels, selector, root) {
 		var match = fieldByLabels(labels, selector, root);
 
@@ -182,6 +295,63 @@
 
 		field.dispatchEvent(new window.Event('input', { bubbles: true }));
 		field.dispatchEvent(new window.Event('change', { bubbles: true }));
+	}
+
+	function optionExists(options, value) {
+		return options.some(function (option) {
+			return option[0] === value;
+		});
+	}
+
+	function enhanceSelectField(spec) {
+		var field = fieldByLabelsScoped(spec.labels, 'input', document);
+		var select = null;
+		var options = spec.options.slice();
+
+		if (!field || field.dataset.dfmgSelectEnhanced === 'true') {
+			return;
+		}
+
+		if (field.value && !optionExists(options, field.value)) {
+			options.push([field.value, field.value]);
+		}
+
+		field.dataset.dfmgSelectEnhanced = 'true';
+		field.classList.add('dfmg-builder-enhanced-field');
+		select = document.createElement('select');
+		select.className = 'dfmg-builder-select';
+
+		options.forEach(function (option) {
+			var item = document.createElement('option');
+
+			item.value = option[0];
+			item.textContent = option[1];
+			select.appendChild(item);
+		});
+
+		select.value = field.value || options[0][0];
+		field.parentNode.insertBefore(select, field);
+
+		select.addEventListener('change', function () {
+			setFieldValue(field, select.value);
+		});
+
+		field.addEventListener('input', function () {
+			if (field.value && !optionExists(options, field.value)) {
+				var item = document.createElement('option');
+
+				item.value = field.value;
+				item.textContent = field.value;
+				select.appendChild(item);
+				options.push([field.value, field.value]);
+			}
+
+			select.value = field.value;
+		});
+	}
+
+	function enhanceSelectFields() {
+		selectFieldSpecs.forEach(enhanceSelectField);
 	}
 
 	function fetchItemsForField(field, callback) {
@@ -407,6 +577,8 @@
 
 	function initSidebarEnhancer() {
 		var run = function () {
+			enhanceSelectFields();
+
 			Array.prototype.slice.call(document.querySelectorAll('textarea')).forEach(function (field) {
 				var container = findFieldContainer(field, imageIdLabels);
 

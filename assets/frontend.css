@@ -172,6 +172,29 @@
 	height: 52px !important;
 }
 
+.dfmg-builder-enhanced-field {
+	display: none !important;
+}
+
+.dfmg-builder-select {
+	appearance: auto;
+	background: #fff;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	box-sizing: border-box;
+	color: #111827;
+	display: block;
+	font: inherit;
+	min-height: 38px;
+	padding: 7px 10px;
+	width: 100%;
+}
+
+.dfmg-builder-select:focus {
+	border-color: #2563eb;
+	outline: none;
+}
+
 .dfmg-builder-controls__bar {
 	align-items: center;
 	display: flex;

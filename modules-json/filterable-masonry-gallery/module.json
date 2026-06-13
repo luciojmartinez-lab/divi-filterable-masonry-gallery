@@ -65,8 +65,8 @@
             "priority": 10,
             "render": true,
             "attrName": "gallery.innerContent",
-            "label": "Saved Gallery Slug",
-            "description": "Use a saved Masonry Gallery slug, for example mi-galeria.",
+            "label": "Slug de galería guardada",
+            "description": "Usa el slug de una galería guardada, por ejemplo mi-galeria.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -98,8 +98,8 @@
             "priority": 20,
             "render": true,
             "attrName": "ids.innerContent",
-            "label": "Image IDs",
-            "description": "Optional comma-separated attachment IDs. Use the visual selector above to choose and reorder images.",
+            "label": "IDs de imagen",
+            "description": "IDs de adjuntos separados por comas. Usa el selector visual para elegir y ordenar imágenes.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -131,7 +131,7 @@
             "priority": 10,
             "render": true,
             "attrName": "columns.innerContent",
-            "label": "Desktop Columns",
+            "label": "Columnas escritorio",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -163,7 +163,7 @@
             "priority": 20,
             "render": true,
             "attrName": "tabletColumns.innerContent",
-            "label": "Tablet Columns",
+            "label": "Columnas tablet",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -195,7 +195,7 @@
             "priority": 30,
             "render": true,
             "attrName": "mobileColumns.innerContent",
-            "label": "Mobile Columns",
+            "label": "Columnas móvil",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -227,8 +227,8 @@
             "priority": 40,
             "render": true,
             "attrName": "gap.innerContent",
-            "label": "Gap",
-            "description": "Pixel gap between images.",
+            "label": "Separación",
+            "description": "Separación en píxeles entre imágenes.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -260,8 +260,8 @@
             "priority": 10,
             "render": true,
             "attrName": "showFilters.innerContent",
-            "label": "Show Filters",
-            "description": "Use on or off.",
+            "label": "Mostrar filtros",
+            "description": "Elige Sí o No.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -293,7 +293,7 @@
             "priority": 20,
             "render": true,
             "attrName": "filterAllLabel.innerContent",
-            "label": "All Label",
+            "label": "Etiqueta Todos",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -325,8 +325,8 @@
             "priority": 30,
             "render": true,
             "attrName": "includeTerms.innerContent",
-            "label": "Limit Filters",
-            "description": "Optional comma-separated Gallery Filter slugs.",
+            "label": "Limitar filtros",
+            "description": "Slugs de filtros separados por comas. Déjalo vacío para mostrar todos.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -358,8 +358,8 @@
             "priority": 40,
             "render": true,
             "attrName": "imageSize.innerContent",
-            "label": "Image Size",
-            "description": "thumbnail, medium, large, or full.",
+            "label": "Tamaño de imagen",
+            "description": "Tamaño de imagen usado en la galería.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -391,8 +391,8 @@
             "priority": 50,
             "render": true,
             "attrName": "showCaptions.innerContent",
-            "label": "Show Captions",
-            "description": "Use on or off.",
+            "label": "Mostrar leyendas",
+            "description": "Elige Sí o No.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -424,8 +424,8 @@
             "priority": 60,
             "render": true,
             "attrName": "captionSource.innerContent",
-            "label": "Caption Source",
-            "description": "caption, title, alt, or none.",
+            "label": "Fuente de leyenda",
+            "description": "Origen del texto mostrado bajo cada imagen.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -457,8 +457,8 @@
             "priority": 70,
             "render": true,
             "attrName": "linkBehavior.innerContent",
-            "label": "Click Action",
-            "description": "lightbox, file, attachment, or none.",
+            "label": "Acción al hacer clic",
+            "description": "Qué ocurre al hacer clic en una imagen.",
             "features": {
               "sticky": false,
               "responsive": false,
@@ -505,7 +505,7 @@
         "component": {
           "name": "divi/composite",
           "props": {
-            "groupLabel": "Gallery"
+            "groupLabel": "Galería"
           }
         }
       },
@@ -517,7 +517,7 @@
         "component": {
           "name": "divi/composite",
           "props": {
-            "groupLabel": "Layout"
+            "groupLabel": "Diseño"
           }
         }
       },
@@ -529,7 +529,7 @@
         "component": {
           "name": "divi/composite",
           "props": {
-            "groupLabel": "Display"
+            "groupLabel": "Visualización"
           }
         }
       }
