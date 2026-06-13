@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,7 @@ The plugin includes:
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
 * Frontend filtering, row-ordered masonry layout, lazy-loaded images, captions, and a small lightbox.
+* Frontend hover overlay with selectable plus, search, link, eye, or no icon.
 
 == Installation ==
 
@@ -45,7 +46,7 @@ Saved gallery example:
 
 Fuller example:
 
-`[dfmg_gallery gallery="mi-galeria" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox"]`
+`[dfmg_gallery gallery="mi-galeria" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox" hover_icon="plus"]`
 
 Options:
 
@@ -62,12 +63,16 @@ Options:
 * `show_captions`: `on` or `off`.
 * `caption_source`: `caption`, `title`, `alt`, or `none`.
 * `link_behavior`: `lightbox`, `file`, `attachment`, or `none`.
+* `hover_icon`: `plus`, `search`, `link`, `eye`, or `none`.
 
 == Divi 5 note ==
 
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.8 =
+Add a frontend hover overlay with selectable plus, search, link, eye, or no icon, while keeping the effect out of the builder editing preview.
 
 = 1.3.7 =
 Fix central Visual Builder drag placement so items keep the intended grid target, and show a move cursor while reordering gallery images.

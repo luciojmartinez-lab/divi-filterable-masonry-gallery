@@ -472,6 +472,39 @@
           }
         }
       }
+    },
+    "hoverIcon": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "plus"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 80,
+            "render": true,
+            "attrName": "hoverIcon.innerContent",
+            "label": "Icono hover",
+            "description": "Icono mostrado al pasar el raton por encima de una imagen.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
     }
   },
   "customCssFields": {

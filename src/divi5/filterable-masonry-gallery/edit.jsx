@@ -107,7 +107,8 @@ const previewParams = (attrs, ids, gallery) => ({
 	imageSize: attrValue(attrs, 'imageSize', 'large'),
 	showCaptions: attrValue(attrs, 'showCaptions', 'on'),
 	captionSource: attrValue(attrs, 'captionSource', 'caption'),
-	linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox')
+	linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox'),
+	hoverIcon: attrValue(attrs, 'hoverIcon', 'plus')
 });
 
 const previewUrl = (params) => {

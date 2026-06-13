@@ -332,6 +332,7 @@ final class DFMG_Plugin {
 			'showCaptions'   => 'show_captions',
 			'captionSource'  => 'caption_source',
 			'linkBehavior'   => 'link_behavior',
+			'hoverIcon'      => 'hover_icon',
 			'includeTerms'   => 'include_terms',
 		);
 
@@ -560,6 +561,7 @@ final class DFMG_Plugin {
 			'show_captions'    => 'on',
 			'caption_source'   => 'caption',
 			'link_behavior'    => 'lightbox',
+			'hover_icon'       => 'plus',
 			'orderby'          => 'post__in',
 			'order'            => 'ASC',
 			'include_terms'    => '',
@@ -701,6 +703,7 @@ final class DFMG_Plugin {
 		$args['show_captions']    = self::bool_to_on_off( $args['show_captions'] );
 		$args['caption_source']   = self::one_of( sanitize_key( (string) $args['caption_source'] ), array( 'caption', 'title', 'alt', 'none' ), 'caption' );
 		$args['link_behavior']    = self::one_of( sanitize_key( (string) $args['link_behavior'] ), array( 'lightbox', 'file', 'attachment', 'none' ), 'lightbox' );
+		$args['hover_icon']       = self::one_of( sanitize_key( (string) $args['hover_icon'] ), array( 'plus', 'search', 'link', 'eye', 'none' ), 'plus' );
 		$args['orderby']          = self::one_of( sanitize_key( (string) $args['orderby'] ), array( 'post__in', 'date', 'title', 'menu_order', 'rand' ), 'post__in' );
 		$args['order']            = self::one_of( strtoupper( sanitize_key( (string) $args['order'] ) ), array( 'ASC', 'DESC' ), 'ASC' );
 		$args['include_terms']    = sanitize_text_field( (string) $args['include_terms'] );
@@ -897,6 +900,7 @@ final class DFMG_Plugin {
 
 		$link_open  = '';
 		$link_close = '';
+		$hover      = self::hover_overlay( $caption, $args['hover_icon'] );
 
 		if ( 'none' !== $args['link_behavior'] ) {
 			$link_data = self::link_data( $attachment, $args['link_behavior'], $caption );
@@ -914,15 +918,45 @@ final class DFMG_Plugin {
 		?>
 		<article class="dfmg-item" data-dfmg-item data-dfmg-id="<?php echo esc_attr( (string) $attachment->ID ); ?>" data-dfmg-terms="<?php echo esc_attr( implode( ' ', $term_slugs ) ); ?>">
 			<figure class="dfmg-card">
-				<?php echo $link_open; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-					<?php echo $image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				<?php echo $link_close; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<div class="dfmg-media">
+					<?php echo $link_open; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php echo $image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php echo $link_close; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php echo $hover; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
 
 				<?php if ( 'on' === $args['show_captions'] && '' !== $caption ) : ?>
 					<figcaption class="dfmg-caption"><?php echo esc_html( $caption ); ?></figcaption>
 				<?php endif; ?>
 			</figure>
 		</article>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Renders the frontend hover overlay.
+	 *
+	 * @param string $caption    Caption text used as the hover label.
+	 * @param string $hover_icon Icon style.
+	 * @return string
+	 */
+	private static function hover_overlay( $caption, $hover_icon ) {
+		if ( 'none' === $hover_icon && '' === $caption ) {
+			return '';
+		}
+
+		ob_start();
+		?>
+		<span class="dfmg-hover<?php echo 'none' === $hover_icon ? ' dfmg-hover--no-icon' : ''; ?>" aria-hidden="true">
+			<?php if ( 'none' !== $hover_icon ) : ?>
+				<span class="dfmg-hover__icon dfmg-hover__icon--<?php echo esc_attr( $hover_icon ); ?>"></span>
+			<?php endif; ?>
+			<?php if ( '' !== $caption ) : ?>
+				<span class="dfmg-hover__label"><?php echo esc_html( $caption ); ?></span>
+			<?php endif; ?>
+		</span>
 		<?php
 
 		return ob_get_clean();

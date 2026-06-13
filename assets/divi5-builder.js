@@ -31,7 +31,8 @@
 			imageSize: fieldAttribute('imageSize', 'Tamaño de imagen', 'large', 'displayGallery', 40, 'divi/text', 'Tamaño de imagen usado en la galería.'),
 			showCaptions: fieldAttribute('showCaptions', 'Mostrar leyendas', 'on', 'displayGallery', 50, 'divi/text', 'Elige Sí o No.'),
 			captionSource: fieldAttribute('captionSource', 'Fuente de leyenda', 'caption', 'displayGallery', 60, 'divi/text', 'Origen del texto mostrado bajo cada imagen.'),
-			linkBehavior: fieldAttribute('linkBehavior', 'Acción al hacer clic', 'lightbox', 'displayGallery', 70, 'divi/text', 'Qué ocurre al hacer clic en una imagen.')
+			linkBehavior: fieldAttribute('linkBehavior', 'Acción al hacer clic', 'lightbox', 'displayGallery', 70, 'divi/text', 'Qué ocurre al hacer clic en una imagen.'),
+			hoverIcon: fieldAttribute('hoverIcon', 'Icono hover', 'plus', 'displayGallery', 80, 'divi/text', 'Icono mostrado al pasar el raton por encima de una imagen.')
 		},
 		customCssFields: {
 			gallery: {
@@ -85,7 +86,8 @@
 		imageSize: valueAttr('large'),
 		showCaptions: valueAttr('on'),
 		captionSource: valueAttr('caption'),
-		linkBehavior: valueAttr('lightbox')
+		linkBehavior: valueAttr('lightbox'),
+		hoverIcon: valueAttr('plus')
 	};
 
 	function valueAttr(value) {
@@ -227,7 +229,8 @@
 			imageSize: attrValue(attrs, 'imageSize', 'large'),
 			showCaptions: attrValue(attrs, 'showCaptions', 'on'),
 			captionSource: attrValue(attrs, 'captionSource', 'caption'),
-			linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox')
+			linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox'),
+			hoverIcon: attrValue(attrs, 'hoverIcon', 'plus')
 		};
 	}
 

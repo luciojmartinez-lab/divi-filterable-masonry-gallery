@@ -90,6 +90,16 @@
 				['attachment', 'Abrir página del adjunto'],
 				['none', 'Sin enlace']
 			]
+		},
+		{
+			labels: ['Hover Icon', 'Icono hover'],
+			options: [
+				['plus', 'Mas (+)'],
+				['search', 'Lupa'],
+				['link', 'Enlace'],
+				['eye', 'Ojo'],
+				['none', 'Ninguno']
+			]
 		}
 	];
 

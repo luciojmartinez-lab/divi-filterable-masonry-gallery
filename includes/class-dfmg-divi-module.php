@@ -203,6 +203,20 @@ class DFMG_Divi_Module extends ET_Builder_Module {
 				),
 				'toggle_slug'     => 'main_content',
 			),
+			'hover_icon'       => array(
+				'label'           => esc_html__( 'Hover Icon', 'divi-filterable-masonry-gallery' ),
+				'type'            => 'select',
+				'option_category' => 'configuration',
+				'default'         => 'plus',
+				'options'         => array(
+					'plus'   => esc_html__( 'Plus', 'divi-filterable-masonry-gallery' ),
+					'search' => esc_html__( 'Search', 'divi-filterable-masonry-gallery' ),
+					'link'   => esc_html__( 'Link', 'divi-filterable-masonry-gallery' ),
+					'eye'    => esc_html__( 'Eye', 'divi-filterable-masonry-gallery' ),
+					'none'   => esc_html__( 'None', 'divi-filterable-masonry-gallery' ),
+				),
+				'toggle_slug'     => 'main_content',
+			),
 		);
 	}
 

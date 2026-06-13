@@ -66,6 +66,7 @@ class GalleryModule implements DependencyInterface {
 			'show_captions'    => self::attr_value( $attrs, 'showCaptions', 'on' ),
 			'caption_source'   => self::attr_value( $attrs, 'captionSource', 'caption' ),
 			'link_behavior'    => self::attr_value( $attrs, 'linkBehavior', 'lightbox' ),
+			'hover_icon'       => self::attr_value( $attrs, 'hoverIcon', 'plus' ),
 			'include_terms'    => self::attr_value( $attrs, 'includeTerms', '' ),
 		);
 
