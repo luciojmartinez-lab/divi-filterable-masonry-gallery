@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.5 =
+Switch frontend masonry from CSS columns to a row-ordered JavaScript layout, add drag insertion indicators, and allow direct reordering from the Divi preview canvas.
 
 = 1.3.4 =
 Show saved-gallery images in the sidebar selector, append newly selected media instead of replacing the current selection, add per-image remove controls, and make the ID textarea compact below the visual selector.

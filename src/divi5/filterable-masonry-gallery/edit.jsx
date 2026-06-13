@@ -62,6 +62,18 @@ const reorder = (list, from, to) => {
 	return copy;
 };
 
+const moveToInsertionIndex = (list, from, insertIndex) => {
+	let target = insertIndex;
+
+	if (from < target) {
+		target -= 1;
+	}
+
+	target = Math.max(0, Math.min(target, list.length - 1));
+
+	return reorder(list, from, target);
+};
+
 const mediaWindow = () => {
 	try {
 		if (window.wp?.media) {
@@ -253,6 +265,22 @@ const enhanceSidebarImageField = (field) => {
 		thumbs.innerHTML = '';
 		status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
 
+		const clearDropMarkers = () => {
+			Array.from(thumbs.querySelectorAll('.is-dfmg-drop-before, .is-dfmg-drop-after')).forEach((thumb) => {
+				thumb.classList.remove('is-dfmg-drop-before', 'is-dfmg-drop-after');
+			});
+		};
+
+		const insertionIndexFor = (button, index, event) => {
+			const rect = button.getBoundingClientRect();
+			const after = event.clientX > rect.left + (rect.width / 2);
+
+			clearDropMarkers();
+			button.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
+
+			return index + (after ? 1 : 0);
+		};
+
 		items.forEach((item, index) => {
 			const button = document.createElement('div');
 			const image = document.createElement('img');
@@ -272,23 +300,35 @@ const enhanceSidebarImageField = (field) => {
 
 			button.addEventListener('dragstart', (event) => {
 				dragIndex = index;
+				button.classList.add('is-dfmg-dragging');
 				event.dataTransfer.effectAllowed = 'move';
+			});
+
+			button.addEventListener('dragend', () => {
+				dragIndex = null;
+				button.classList.remove('is-dfmg-dragging');
+				clearDropMarkers();
 			});
 
 			button.addEventListener('dragover', (event) => {
 				event.preventDefault();
+				event.dataTransfer.dropEffect = 'move';
+				insertionIndexFor(button, index, event);
 			});
 
 			button.addEventListener('drop', (event) => {
 				event.preventDefault();
+				const insertIndex = insertionIndexFor(button, index, event);
 
-				if (dragIndex === null || dragIndex === index) {
+				if (dragIndex === null || dragIndex === insertIndex || dragIndex + 1 === insertIndex) {
+					clearDropMarkers();
 					return;
 				}
 
-				const reordered = reorder(items, dragIndex, index);
+				const reordered = moveToInsertionIndex(items, dragIndex, insertIndex);
 
 				dragIndex = null;
+				clearDropMarkers();
 				applyIds(itemIds(reordered));
 			});
 
@@ -394,6 +434,164 @@ export const initSidebarEnhancer = () => {
 	});
 };
 
+const targetDocument = () => {
+	try {
+		return window.top?.document || document;
+	} catch (error) {
+		return document;
+	}
+};
+
+const findFieldContainerInDocument = (field, label, doc) => {
+	let node = field.parentElement;
+	const needle = label.toLowerCase();
+	let depth = 0;
+
+	while (node && node !== doc.body && depth < 10) {
+		if ((node.textContent || '').toLowerCase().includes(needle)) {
+			return node;
+		}
+
+		node = node.parentElement;
+		depth += 1;
+	}
+
+	return field.parentElement;
+};
+
+const fieldByLabelInDocument = (label, selector, doc) => (
+	Array.from(doc.querySelectorAll(selector)).find((field) => {
+		const container = findFieldContainerInDocument(field, label, doc);
+
+		return container && (container.textContent || '').toLowerCase().includes(label.toLowerCase());
+	})
+);
+
+const setExternalFieldValue = (field, value) => {
+	const ownerWindow = field.ownerDocument.defaultView || window;
+	const prototype = field.tagName === 'TEXTAREA' ? ownerWindow.HTMLTextAreaElement.prototype : ownerWindow.HTMLInputElement.prototype;
+	const descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+
+	if (descriptor?.set) {
+		descriptor.set.call(field, value);
+	} else {
+		field.value = value;
+	}
+
+	field.dispatchEvent(new ownerWindow.Event('input', { bubbles: true }));
+	field.dispatchEvent(new ownerWindow.Event('change', { bubbles: true }));
+};
+
+const applyIdsToActiveSettings = (ids) => {
+	const doc = targetDocument();
+	const idsField = doc.querySelector('textarea.dfmg-builder-ids-field') || fieldByLabelInDocument('Image IDs', 'textarea', doc);
+	const slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc);
+
+	if (!idsField) {
+		return false;
+	}
+
+	if (slugField) {
+		setExternalFieldValue(slugField, '');
+	}
+
+	setExternalFieldValue(idsField, ids.join(','));
+	return true;
+};
+
+const clearPreviewDropMarkers = (root) => {
+	Array.from(root.querySelectorAll('.is-dfmg-drop-before, .is-dfmg-drop-after')).forEach((item) => {
+		item.classList.remove('is-dfmg-drop-before', 'is-dfmg-drop-after');
+	});
+};
+
+const previewInsertionIndexFor = (root, item, index, event) => {
+	const rect = item.getBoundingClientRect();
+	const after = event.clientX > rect.left + (rect.width / 2);
+
+	clearPreviewDropMarkers(root);
+	item.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
+
+	return index + (after ? 1 : 0);
+};
+
+const bindBuilderPreviewReorder = (root) => {
+	const grid = root.querySelector('[data-dfmg-grid]');
+	let draggedItem = null;
+
+	if (!grid || grid.dataset.dfmgPreviewReorder === 'true') {
+		return;
+	}
+
+	grid.dataset.dfmgPreviewReorder = 'true';
+	Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]')).forEach((item) => {
+		item.draggable = true;
+		item.classList.add('dfmg-builder-preview-item');
+
+		item.addEventListener('dragstart', (event) => {
+			draggedItem = item;
+			item.classList.add('is-dfmg-dragging');
+			event.dataTransfer.effectAllowed = 'move';
+			event.dataTransfer.setData('text/plain', item.getAttribute('data-dfmg-id') || '');
+		});
+
+		item.addEventListener('dragend', () => {
+			if (draggedItem) {
+				draggedItem.classList.remove('is-dfmg-dragging');
+			}
+
+			draggedItem = null;
+			clearPreviewDropMarkers(grid);
+		});
+
+		item.addEventListener('dragover', (event) => {
+			const items = Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+			const index = items.indexOf(item);
+
+			if (!draggedItem || index === -1) {
+				return;
+			}
+
+			event.preventDefault();
+			event.dataTransfer.dropEffect = 'move';
+			previewInsertionIndexFor(grid, item, index, event);
+		});
+
+		item.addEventListener('drop', (event) => {
+			const items = Array.from(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+			const from = items.indexOf(draggedItem);
+			const index = items.indexOf(item);
+			const ids = items.map((candidate) => parseInt(candidate.getAttribute('data-dfmg-id'), 10)).filter((id) => id > 0);
+			let insertIndex = null;
+			let target = null;
+			let moved = null;
+
+			event.preventDefault();
+
+			if (!draggedItem || from === -1 || index === -1) {
+				clearPreviewDropMarkers(grid);
+				return;
+			}
+
+			insertIndex = previewInsertionIndexFor(grid, item, index, event);
+			if (from === insertIndex || from + 1 === insertIndex) {
+				clearPreviewDropMarkers(grid);
+				return;
+			}
+
+			target = insertIndex;
+			if (from < target) {
+				target -= 1;
+			}
+
+			moved = ids.splice(from, 1)[0];
+			ids.splice(Math.max(0, Math.min(target, ids.length)), 0, moved);
+			applyIdsToActiveSettings(ids);
+			clearPreviewDropMarkers(grid);
+		});
+	});
+};
+
 const usePreview = (attrs, activeIds, activeGallery) => {
 	const [preview, setPreview] = useState({
 		html: '',
@@ -475,6 +673,10 @@ const GalleryPreview = (props) => {
 	useEffect(() => {
 		if (previewRef.current && window.DFMGInitGalleries) {
 			window.DFMGInitGalleries(previewRef.current);
+		}
+
+		if (previewRef.current) {
+			bindBuilderPreviewReorder(previewRef.current);
 		}
 	}, [preview.html]);
 

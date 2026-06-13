@@ -912,7 +912,7 @@ final class DFMG_Plugin {
 
 		ob_start();
 		?>
-		<article class="dfmg-item" data-dfmg-item data-dfmg-terms="<?php echo esc_attr( implode( ' ', $term_slugs ) ); ?>">
+		<article class="dfmg-item" data-dfmg-item data-dfmg-id="<?php echo esc_attr( (string) $attachment->ID ); ?>" data-dfmg-terms="<?php echo esc_attr( implode( ' ', $term_slugs ) ); ?>">
 			<figure class="dfmg-card">
 				<?php echo $link_open; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					<?php echo $image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

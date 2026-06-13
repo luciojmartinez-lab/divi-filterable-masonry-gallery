@@ -84,6 +84,18 @@
 		return copy;
 	}
 
+	function moveToInsertionIndex(list, from, insertIndex) {
+		var target = insertIndex;
+
+		if (from < target) {
+			target -= 1;
+		}
+
+		target = Math.max(0, Math.min(target, list.length - 1));
+
+		return reorder(list, from, target);
+	}
+
 	function mediaWindow() {
 		try {
 			if (window.wp && window.wp.media) {
@@ -245,6 +257,22 @@
 			thumbs.innerHTML = '';
 			status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
 
+			function clearDropMarkers() {
+				Array.prototype.slice.call(thumbs.querySelectorAll('.is-dfmg-drop-before, .is-dfmg-drop-after')).forEach(function (thumb) {
+					thumb.classList.remove('is-dfmg-drop-before', 'is-dfmg-drop-after');
+				});
+			}
+
+			function insertionIndexFor(button, index, event) {
+				var rect = button.getBoundingClientRect();
+				var after = event.clientX > rect.left + (rect.width / 2);
+
+				clearDropMarkers();
+				button.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
+
+				return index + (after ? 1 : 0);
+			}
+
 			items.forEach(function (item, index) {
 				var button = document.createElement('div');
 				var image = document.createElement('img');
@@ -264,23 +292,37 @@
 
 				button.addEventListener('dragstart', function (event) {
 					dragIndex = index;
+					button.classList.add('is-dfmg-dragging');
 					event.dataTransfer.effectAllowed = 'move';
+				});
+
+				button.addEventListener('dragend', function () {
+					dragIndex = null;
+					button.classList.remove('is-dfmg-dragging');
+					clearDropMarkers();
 				});
 
 				button.addEventListener('dragover', function (event) {
 					event.preventDefault();
+					event.dataTransfer.dropEffect = 'move';
+					insertionIndexFor(button, index, event);
 				});
 
 				button.addEventListener('drop', function (event) {
 					var reordered = null;
+					var insertIndex = null;
 
 					event.preventDefault();
-					if (dragIndex === null || dragIndex === index) {
+					insertIndex = insertionIndexFor(button, index, event);
+
+					if (dragIndex === null || dragIndex === insertIndex || dragIndex + 1 === insertIndex) {
+						clearDropMarkers();
 						return;
 					}
 
-					reordered = reorder(items, dragIndex, index);
+					reordered = moveToInsertionIndex(items, dragIndex, insertIndex);
 					dragIndex = null;
+					clearDropMarkers();
 					applyIds(itemIds(reordered));
 				});
 

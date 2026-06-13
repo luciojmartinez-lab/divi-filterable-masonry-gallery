@@ -2,6 +2,7 @@
 	--dfmg-columns: 3;
 	--dfmg-tablet-columns: 2;
 	--dfmg-mobile-columns: 1;
+	--dfmg-active-columns: var(--dfmg-columns);
 	--dfmg-gap: 18px;
 	clear: both;
 	display: flow-root;
@@ -51,11 +52,12 @@
 
 .dfmg-grid {
 	clear: both;
-	column-count: var(--dfmg-columns);
-	column-gap: var(--dfmg-gap);
+	display: grid;
+	gap: var(--dfmg-gap);
+	grid-template-columns: repeat(var(--dfmg-active-columns), minmax(0, 1fr));
 	margin-left: 0;
 	min-height: 1px;
-	position: static;
+	position: relative;
 }
 
 .dfmg-grid-sizer {
@@ -63,22 +65,57 @@
 }
 
 .dfmg-item {
-	break-inside: avoid;
 	box-sizing: border-box;
-	display: inline-block;
+	display: block;
 	float: none;
-	left: auto !important;
-	margin-bottom: var(--dfmg-gap);
+	margin: 0;
 	padding-left: 0;
-	position: static !important;
-	top: auto !important;
+	position: relative;
 	transition: opacity 180ms ease, transform 180ms ease;
-	vertical-align: top;
 	width: 100%;
+}
+
+.is-dfmg-masonry-ready .dfmg-item {
+	position: absolute;
 }
 
 .dfmg-item.is-hidden {
 	display: none;
+}
+
+.dfmg-builder-preview-item {
+	cursor: grab;
+}
+
+.dfmg-builder-preview-item.is-dfmg-dragging,
+.dfmg-builder-thumb.is-dfmg-dragging {
+	opacity: 0.45;
+}
+
+.dfmg-item.is-dfmg-drop-before::before,
+.dfmg-item.is-dfmg-drop-after::before,
+.dfmg-builder-thumb.is-dfmg-drop-before::before,
+.dfmg-builder-thumb.is-dfmg-drop-after::before {
+	background: #2563eb;
+	border-radius: 999px;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+	content: "";
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	z-index: 20;
+}
+
+.dfmg-item.is-dfmg-drop-before::before,
+.dfmg-builder-thumb.is-dfmg-drop-before::before {
+	left: -8px;
+}
+
+.dfmg-item.is-dfmg-drop-after::before,
+.dfmg-builder-thumb.is-dfmg-drop-after::before {
+	right: -8px;
 }
 
 .dfmg-card {
@@ -316,8 +353,8 @@
 }
 
 @media (max-width: 980px) {
-	.dfmg-grid {
-		column-count: var(--dfmg-tablet-columns);
+	.dfmg-gallery {
+		--dfmg-active-columns: var(--dfmg-tablet-columns);
 	}
 }
 
@@ -331,8 +368,8 @@
 		padding: 7px 12px;
 	}
 
-	.dfmg-grid {
-		column-count: var(--dfmg-mobile-columns);
+	.dfmg-gallery {
+		--dfmg-active-columns: var(--dfmg-mobile-columns);
 	}
 
 	.dfmg-lightbox {

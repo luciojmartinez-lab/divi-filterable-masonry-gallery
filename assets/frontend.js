@@ -92,17 +92,110 @@
 			return;
 		}
 
-		resetMasonryStyles(entry);
+		applyMasonryLayout(entry);
+	}
+
+	function activeColumnCount(gallery) {
+		var styles = window.getComputedStyle(gallery);
+		var columns = parseInt(styles.getPropertyValue('--dfmg-columns'), 10);
+
+		if (window.innerWidth <= 767) {
+			columns = parseInt(styles.getPropertyValue('--dfmg-mobile-columns'), 10);
+		} else if (window.innerWidth <= 980) {
+			columns = parseInt(styles.getPropertyValue('--dfmg-tablet-columns'), 10);
+		}
+
+		return Math.max(1, columns || 1);
+	}
+
+	function activeGap(gallery) {
+		var styles = window.getComputedStyle(gallery);
+		var gap = parseFloat(styles.getPropertyValue('--dfmg-gap'));
+
+		return Number.isFinite(gap) ? gap : 18;
+	}
+
+	function applyMasonryLayout(entry) {
+		var grid = entry.grid;
+		var gallery = entry.gallery;
+		var visibleItems = entry.items.filter(function (item) {
+			return !item.classList.contains('is-hidden');
+		});
+		var columns = activeColumnCount(gallery);
+		var gap = activeGap(gallery);
+		var width = grid.clientWidth;
+		var itemWidth = columns > 1 ? (width - (gap * (columns - 1))) / columns : width;
+		var heights = [];
+		var maxHeight = 0;
+
+		if (!width || !visibleItems.length) {
+			resetMasonryStyles(entry);
+			return;
+		}
+
+		itemWidth = Math.max(1, itemWidth);
+
+		for (var i = 0; i < columns; i += 1) {
+			heights.push(0);
+		}
+
+		gallery.classList.add('is-dfmg-masonry-ready');
+		grid.style.position = 'relative';
+		grid.style.height = '';
+		grid.style.minHeight = '1px';
+
+		entry.items.forEach(function (item) {
+			if (item.classList.contains('is-hidden')) {
+				item.style.display = 'none';
+				item.style.position = '';
+				item.style.left = '';
+				item.style.top = '';
+				item.style.width = '';
+				return;
+			}
+
+			item.style.display = 'block';
+			item.style.position = 'absolute';
+			item.style.width = itemWidth + 'px';
+		});
+
+		visibleItems.forEach(function (item, index) {
+			var column = index < columns ? index : shortestColumn(heights);
+			var left = column * (itemWidth + gap);
+			var top = heights[column];
+
+			item.style.left = left + 'px';
+			item.style.top = top + 'px';
+			heights[column] = top + item.offsetHeight + gap;
+		});
+
+		maxHeight = Math.max.apply(null, heights);
+		grid.style.height = Math.max(0, maxHeight - gap) + 'px';
+	}
+
+	function shortestColumn(heights) {
+		var shortest = 0;
+
+		heights.forEach(function (height, index) {
+			if (height < heights[shortest]) {
+				shortest = index;
+			}
+		});
+
+		return shortest;
 	}
 
 	function resetMasonryStyles(entry) {
+		entry.gallery.classList.remove('is-dfmg-masonry-ready');
 		entry.grid.style.height = '';
 		entry.grid.style.minHeight = '';
 
 		entry.items.forEach(function (item) {
+			item.style.display = '';
 			item.style.position = '';
 			item.style.left = '';
 			item.style.top = '';
+			item.style.width = '';
 		});
 	}
 

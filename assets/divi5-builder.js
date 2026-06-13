@@ -306,6 +306,18 @@
 		return copy;
 	}
 
+	function moveToInsertionIndex(list, from, insertIndex) {
+		var target = insertIndex;
+
+		if (from < target) {
+			target -= 1;
+		}
+
+		target = Math.max(0, Math.min(target, list.length - 1));
+
+		return reorder(list, from, target);
+	}
+
 	function findFieldContainer(field, label) {
 		var node = field.parentElement;
 		var needle = label.toLowerCase();
@@ -459,6 +471,22 @@
 			thumbs.innerHTML = '';
 			status.textContent = message || (items.length ? '' : 'No hay imágenes seleccionadas.');
 
+			function clearDropMarkers() {
+				Array.prototype.slice.call(thumbs.querySelectorAll('.is-dfmg-drop-before, .is-dfmg-drop-after')).forEach(function (thumb) {
+					thumb.classList.remove('is-dfmg-drop-before', 'is-dfmg-drop-after');
+				});
+			}
+
+			function insertionIndexFor(button, index, event) {
+				var rect = button.getBoundingClientRect();
+				var after = event.clientX > rect.left + (rect.width / 2);
+
+				clearDropMarkers();
+				button.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
+
+				return index + (after ? 1 : 0);
+			}
+
 			items.forEach(function (item, index) {
 				var button = document.createElement('div');
 				var image = document.createElement('img');
@@ -478,23 +506,37 @@
 
 				button.addEventListener('dragstart', function (event) {
 					dragIndex = index;
+					button.classList.add('is-dfmg-dragging');
 					event.dataTransfer.effectAllowed = 'move';
+				});
+
+				button.addEventListener('dragend', function () {
+					dragIndex = null;
+					button.classList.remove('is-dfmg-dragging');
+					clearDropMarkers();
 				});
 
 				button.addEventListener('dragover', function (event) {
 					event.preventDefault();
+					event.dataTransfer.dropEffect = 'move';
+					insertionIndexFor(button, index, event);
 				});
 
 				button.addEventListener('drop', function (event) {
 					var reordered = null;
+					var insertIndex = null;
 
 					event.preventDefault();
-					if (dragIndex === null || dragIndex === index) {
+					insertIndex = insertionIndexFor(button, index, event);
+
+					if (dragIndex === null || dragIndex === insertIndex || dragIndex + 1 === insertIndex) {
+						clearDropMarkers();
 						return;
 					}
 
-					reordered = reorder(items, dragIndex, index);
+					reordered = moveToInsertionIndex(items, dragIndex, insertIndex);
 					dragIndex = null;
+					clearDropMarkers();
 					applyIds(itemIds(reordered));
 				});
 
@@ -603,6 +645,170 @@
 		observer.observe(document.body, {
 			childList: true,
 			subtree: true
+		});
+	}
+
+	function targetDocument() {
+		try {
+			return window.top && window.top.document ? window.top.document : document;
+		} catch (error) {
+			return document;
+		}
+	}
+
+	function findFieldContainerInDocument(field, label, doc) {
+		var node = field.parentElement;
+		var needle = label.toLowerCase();
+		var depth = 0;
+
+		while (node && node !== doc.body && depth < 10) {
+			if ((node.textContent || '').toLowerCase().indexOf(needle) !== -1) {
+				return node;
+			}
+
+			node = node.parentElement;
+			depth += 1;
+		}
+
+		return field.parentElement;
+	}
+
+	function fieldByLabelInDocument(label, selector, doc) {
+		var fields = Array.prototype.slice.call(doc.querySelectorAll(selector));
+		var needle = label.toLowerCase();
+
+		return fields.find(function (field) {
+			var container = findFieldContainerInDocument(field, label, doc);
+
+			return container && (container.textContent || '').toLowerCase().indexOf(needle) !== -1;
+		});
+	}
+
+	function setExternalFieldValue(field, value) {
+		var ownerWindow = field.ownerDocument.defaultView || window;
+		var prototype = field.tagName === 'TEXTAREA' ? ownerWindow.HTMLTextAreaElement.prototype : ownerWindow.HTMLInputElement.prototype;
+		var descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+
+		if (descriptor && descriptor.set) {
+			descriptor.set.call(field, value);
+		} else {
+			field.value = value;
+		}
+
+		field.dispatchEvent(new ownerWindow.Event('input', { bubbles: true }));
+		field.dispatchEvent(new ownerWindow.Event('change', { bubbles: true }));
+	}
+
+	function applyIdsToActiveSettings(ids) {
+		var doc = targetDocument();
+		var idsField = doc.querySelector('textarea.dfmg-builder-ids-field') || fieldByLabelInDocument('Image IDs', 'textarea', doc);
+		var slugField = fieldByLabelInDocument('Saved Gallery Slug', 'input', doc);
+
+		if (!idsField) {
+			return false;
+		}
+
+		if (slugField) {
+			setExternalFieldValue(slugField, '');
+		}
+
+		setExternalFieldValue(idsField, ids.join(','));
+		return true;
+	}
+
+	function clearPreviewDropMarkers(root) {
+		Array.prototype.slice.call(root.querySelectorAll('.is-dfmg-drop-before, .is-dfmg-drop-after')).forEach(function (item) {
+			item.classList.remove('is-dfmg-drop-before', 'is-dfmg-drop-after');
+		});
+	}
+
+	function previewInsertionIndexFor(root, item, index, event) {
+		var rect = item.getBoundingClientRect();
+		var after = event.clientX > rect.left + (rect.width / 2);
+
+		clearPreviewDropMarkers(root);
+		item.classList.add(after ? 'is-dfmg-drop-after' : 'is-dfmg-drop-before');
+
+		return index + (after ? 1 : 0);
+	}
+
+	function bindBuilderPreviewReorder(root) {
+		var grid = root.querySelector('[data-dfmg-grid]');
+		var draggedItem = null;
+
+		if (!grid || grid.dataset.dfmgPreviewReorder === 'true') {
+			return;
+		}
+
+		grid.dataset.dfmgPreviewReorder = 'true';
+		Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]')).forEach(function (item) {
+			item.draggable = true;
+			item.classList.add('dfmg-builder-preview-item');
+
+			item.addEventListener('dragstart', function (event) {
+				draggedItem = item;
+				item.classList.add('is-dfmg-dragging');
+				event.dataTransfer.effectAllowed = 'move';
+				event.dataTransfer.setData('text/plain', item.getAttribute('data-dfmg-id') || '');
+			});
+
+			item.addEventListener('dragend', function () {
+				if (draggedItem) {
+					draggedItem.classList.remove('is-dfmg-dragging');
+				}
+
+				draggedItem = null;
+				clearPreviewDropMarkers(grid);
+			});
+
+			item.addEventListener('dragover', function (event) {
+				var items = Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+				var index = items.indexOf(item);
+
+				if (!draggedItem || index === -1) {
+					return;
+				}
+
+				event.preventDefault();
+				event.dataTransfer.dropEffect = 'move';
+				previewInsertionIndexFor(grid, item, index, event);
+			});
+
+			item.addEventListener('drop', function (event) {
+				var items = Array.prototype.slice.call(grid.querySelectorAll('[data-dfmg-item][data-dfmg-id]:not(.is-hidden)'));
+				var from = items.indexOf(draggedItem);
+				var index = items.indexOf(item);
+				var insertIndex = null;
+				var ids = items.map(function (candidate) {
+					return parseInt(candidate.getAttribute('data-dfmg-id'), 10);
+				}).filter(function (id) {
+					return id > 0;
+				});
+				var target = insertIndex;
+				var moved = null;
+
+				event.preventDefault();
+
+				if (!draggedItem || from === -1 || index === -1) {
+					clearPreviewDropMarkers(grid);
+					return;
+				}
+
+				insertIndex = previewInsertionIndexFor(grid, item, index, event);
+				if (from === insertIndex || from + 1 === insertIndex) {
+					clearPreviewDropMarkers(grid);
+					return;
+				}
+
+				if (from < target) {
+					target -= 1;
+				}
+
+				moved = ids.splice(from, 1)[0];
+				ids.splice(Math.max(0, Math.min(target, ids.length)), 0, moved);
+				applyIdsToActiveSettings(ids);
+				clearPreviewDropMarkers(grid);
+			});
 		});
 	}
 
@@ -731,6 +937,10 @@
 		React.useEffect(function () {
 			if (previewRef.current && window.DFMGInitGalleries) {
 				window.DFMGInitGalleries(previewRef.current);
+			}
+
+			if (previewRef.current) {
+				bindBuilderPreviewReorder(previewRef.current);
 			}
 		}, [preview.html]);
 
