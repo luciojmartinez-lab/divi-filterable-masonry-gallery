@@ -50,6 +50,7 @@ final class DFMG_Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_gallery_meta_boxes' ) );
 		add_action( 'save_post_' . self::POST_TYPE, array( $this, 'save_gallery_meta' ) );
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'divi_module_library_modules_dependency_tree', array( $this, 'register_divi5_module' ) );
 		add_action( 'divi_visual_builder_assets_before_enqueue_scripts', array( $this, 'enqueue_divi5_builder_assets' ) );
 		add_action( 'et_builder_ready', array( $this, 'register_divi_module' ) );
@@ -191,6 +192,8 @@ final class DFMG_Plugin {
 			return;
 		}
 
+		wp_enqueue_media();
+
 		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
 			array(
 				'name'    => 'dfmg-divi5-builder-script',
@@ -201,6 +204,19 @@ final class DFMG_Plugin {
 						'divi-module-library',
 						'divi-vendor-wp-hooks',
 					),
+					'enqueue_top_window' => false,
+					'enqueue_app_window' => true,
+				),
+			)
+		);
+
+		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
+			array(
+				'name'    => 'dfmg-divi5-frontend-script',
+				'version' => DFMG_VERSION,
+				'script'  => array(
+					'src'                => DFMG_PLUGIN_URL . 'assets/frontend.js',
+					'deps'               => array(),
 					'enqueue_top_window' => false,
 					'enqueue_app_window' => true,
 				),
@@ -231,6 +247,88 @@ final class DFMG_Plugin {
 			&& et_builder_d5_enabled()
 			&& class_exists( '\ET\Builder\Packages\ModuleLibrary\ModuleRegistration' )
 			&& interface_exists( '\ET\Builder\Framework\DependencyManagement\Interfaces\DependencyInterface' );
+	}
+
+	/**
+	 * Registers editor REST routes used by the Divi 5 Visual Builder preview.
+	 *
+	 * @return void
+	 */
+	public function register_rest_routes() {
+		register_rest_route(
+			'dfmg/v1',
+			'/preview',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'rest_gallery_preview' ),
+				'permission_callback' => array( $this, 'rest_can_preview' ),
+			)
+		);
+	}
+
+	/**
+	 * Checks whether the current user can preview galleries in the builder.
+	 *
+	 * @return bool
+	 */
+	public function rest_can_preview() {
+		return current_user_can( 'edit_posts' );
+	}
+
+	/**
+	 * Returns rendered gallery HTML and selected item thumbnails for Divi 5.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function rest_gallery_preview( $request ) {
+		$args = self::rest_gallery_args( $request );
+		$ids  = self::resolve_gallery_ids( $args );
+
+		return rest_ensure_response(
+			array(
+				'html'  => self::render_gallery( $args ),
+				'ids'   => implode( ',', $ids ),
+				'items' => self::preview_items( $ids ),
+			)
+		);
+	}
+
+	/**
+	 * Builds gallery args from REST params.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return array<string,mixed>
+	 */
+	private static function rest_gallery_args( $request ) {
+		$params = $request->get_params();
+		$args   = array();
+
+		foreach ( self::default_gallery_args() as $key => $default ) {
+			if ( isset( $params[ $key ] ) ) {
+				$args[ $key ] = $params[ $key ];
+			}
+		}
+
+		$aliases = array(
+			'tabletColumns'  => 'tablet_columns',
+			'mobileColumns'  => 'mobile_columns',
+			'imageSize'      => 'image_size',
+			'filterAllLabel' => 'filter_all_label',
+			'showFilters'    => 'show_filters',
+			'showCaptions'   => 'show_captions',
+			'captionSource'  => 'caption_source',
+			'linkBehavior'   => 'link_behavior',
+			'includeTerms'   => 'include_terms',
+		);
+
+		foreach ( $aliases as $source => $target ) {
+			if ( isset( $params[ $source ] ) ) {
+				$args[ $target ] = $params[ $source ];
+			}
+		}
+
+		return $args;
 	}
 
 	/**
@@ -526,6 +624,49 @@ final class DFMG_Plugin {
 		<?php
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * Resolves the attachment IDs that a gallery configuration points to.
+	 *
+	 * @param array<string,mixed> $args Gallery arguments.
+	 * @return array<int>
+	 */
+	public static function resolve_gallery_ids( $args ) {
+		$args = wp_parse_args( (array) $args, self::default_gallery_args() );
+		$args = self::sanitize_gallery_args( $args );
+
+		return self::parse_attachment_ids( $args );
+	}
+
+	/**
+	 * Returns lightweight attachment data for builder previews.
+	 *
+	 * @param array<int> $ids Attachment IDs.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function preview_items( $ids ) {
+		$items = array();
+
+		foreach ( $ids as $id ) {
+			$thumb = wp_get_attachment_image_src( $id, 'thumbnail' );
+			$image = wp_get_attachment_image_src( $id, 'medium' );
+
+			if ( ! $thumb && ! $image ) {
+				continue;
+			}
+
+			$items[] = array(
+				'id'      => $id,
+				'thumb'   => $thumb ? $thumb[0] : $image[0],
+				'url'     => $image ? $image[0] : $thumb[0],
+				'alt'     => trim( (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) ),
+				'title'   => get_the_title( $id ),
+				'caption' => trim( (string) wp_get_attachment_caption( $id ) ),
+			);
+		}
+
+		return $items;
 	}
 
 	/**

@@ -273,6 +273,13 @@
 		});
 	}
 
+	window.DFMGInitGalleries = function (root) {
+		var scope = root || document;
+
+		Array.prototype.slice.call(scope.querySelectorAll('[data-dfmg-gallery]')).forEach(initGallery);
+		galleries.forEach(layoutGallery);
+	};
+
 	function debounce(callback, delay) {
 		var timer = null;
 

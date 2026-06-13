@@ -1,10 +1,10 @@
-=== Divi Filterable Masonry Gallery ===
-Contributors: codex
+=== Divi Filterable Masonry Gallery by Lucio ===
+Contributors: luciojmartinez
 Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,12 +12,14 @@ Adds a Divi-compatible image gallery with filter buttons, masonry layout, captio
 
 == Description ==
 
-Divi Filterable Masonry Gallery creates responsive image galleries that can be filtered by terms assigned to media attachments.
+Divi Filterable Masonry Gallery by Lucio creates responsive image galleries that can be filtered by terms assigned to media attachments.
 
 The plugin includes:
 
 * A Divi builder module when the classic Divi module API is available.
 * A native Divi 5 module registered through module JSON and the Divi 5 module library API.
+* A real Visual Builder preview rendered through the plugin's PHP gallery output.
+* A visual image selector in the Divi 5 module preview with drag-and-drop thumbnail reordering.
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
@@ -66,6 +68,9 @@ Options:
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.0 =
+Add a real Divi 5 Visual Builder preview, visual media selector controls with thumbnail drag-and-drop reordering, editor REST preview endpoint, and Lucio J. Martinez plugin attribution.
 
 = 1.2.0 =
 Add an experimental native Divi 5 module registration using module JSON, Divi 5 module library JavaScript, and PHP render callback while keeping the legacy module for existing layouts.

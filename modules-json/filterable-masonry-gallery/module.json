@@ -99,7 +99,7 @@
             "render": true,
             "attrName": "ids.innerContent",
             "label": "Image IDs",
-            "description": "Optional comma-separated attachment IDs. This overrides Saved Gallery Slug.",
+            "description": "Optional comma-separated attachment IDs. Use the visual selector in the module preview to choose and reorder images.",
             "features": {
               "sticky": false,
               "responsive": false,

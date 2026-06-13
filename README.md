@@ -1,4 +1,4 @@
-# Divi Filterable Masonry Gallery
+# Divi Filterable Masonry Gallery by Lucio
 
 WordPress plugin for creating responsive filterable image galleries with a masonry layout, built for Divi sites with a shortcode fallback.
 
@@ -6,6 +6,8 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 
 - Divi-compatible custom module when the classic Divi builder API is available.
 - Native Divi 5 module registration using module JSON and the Divi 5 module library API.
+- Visual Builder preview rendered through the same PHP gallery output used on the frontend.
+- Visual image selector in the Divi 5 module preview with thumbnail reordering by drag and drop.
 - Stable `[dfmg_gallery]` shortcode fallback for Divi 5 Code/Text modules or any WordPress content area.
 - Saved Masonry Galleries with a WordPress media picker and reusable slugs.
 - Gallery Filters taxonomy for images in the Media Library.
@@ -70,7 +72,7 @@ npm run build
 Package the `divi-filterable-masonry-gallery` folder as a ZIP for installation:
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.2.0.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.0.zip -Force
 ```
 
 ## License
