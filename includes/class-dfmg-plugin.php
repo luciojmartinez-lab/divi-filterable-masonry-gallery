@@ -50,6 +50,8 @@ final class DFMG_Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_gallery_meta_boxes' ) );
 		add_action( 'save_post_' . self::POST_TYPE, array( $this, 'save_gallery_meta' ) );
+		add_action( 'divi_module_library_modules_dependency_tree', array( $this, 'register_divi5_module' ) );
+		add_action( 'divi_visual_builder_assets_before_enqueue_scripts', array( $this, 'enqueue_divi5_builder_assets' ) );
 		add_action( 'et_builder_ready', array( $this, 'register_divi_module' ) );
 	}
 
@@ -155,6 +157,80 @@ final class DFMG_Plugin {
 		}
 
 		require_once DFMG_PLUGIN_DIR . 'includes/class-dfmg-divi-module.php';
+	}
+
+	/**
+	 * Registers the native Divi 5 module dependency.
+	 *
+	 * @param object $dependency_tree Divi dependency tree.
+	 * @return void
+	 */
+	public function register_divi5_module( $dependency_tree ) {
+		if ( ! self::is_divi5_available() || ! is_object( $dependency_tree ) || ! method_exists( $dependency_tree, 'add_dependency' ) ) {
+			return;
+		}
+
+		require_once DFMG_PLUGIN_DIR . 'includes/divi5/class-dfmg-divi5-gallery-module.php';
+
+		if ( class_exists( '\DFMG\Divi5\GalleryModule' ) ) {
+			$dependency_tree->add_dependency( new \DFMG\Divi5\GalleryModule() );
+		}
+	}
+
+	/**
+	 * Enqueues the native Divi 5 Visual Builder bundle.
+	 *
+	 * @return void
+	 */
+	public function enqueue_divi5_builder_assets() {
+		if ( ! self::is_divi5_available() || ! function_exists( 'et_core_is_fb_enabled' ) || ! et_core_is_fb_enabled() ) {
+			return;
+		}
+
+		if ( ! class_exists( '\ET\Builder\VisualBuilder\Assets\PackageBuildManager' ) ) {
+			return;
+		}
+
+		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
+			array(
+				'name'    => 'dfmg-divi5-builder-script',
+				'version' => DFMG_VERSION,
+				'script'  => array(
+					'src'                => DFMG_PLUGIN_URL . 'assets/divi5-builder.js',
+					'deps'               => array(
+						'divi-module-library',
+						'divi-vendor-wp-hooks',
+					),
+					'enqueue_top_window' => false,
+					'enqueue_app_window' => true,
+				),
+			)
+		);
+
+		\ET\Builder\VisualBuilder\Assets\PackageBuildManager::register_package_build(
+			array(
+				'name'    => 'dfmg-divi5-builder-style',
+				'version' => DFMG_VERSION,
+				'style'   => array(
+					'src'                => DFMG_PLUGIN_URL . 'assets/frontend.css',
+					'deps'               => array(),
+					'enqueue_top_window' => false,
+					'enqueue_app_window' => true,
+				),
+			)
+		);
+	}
+
+	/**
+	 * Checks whether Divi 5 APIs required for native modules are available.
+	 *
+	 * @return bool
+	 */
+	public static function is_divi5_available() {
+		return function_exists( 'et_builder_d5_enabled' )
+			&& et_builder_d5_enabled()
+			&& class_exists( '\ET\Builder\Packages\ModuleLibrary\ModuleRegistration' )
+			&& interface_exists( '\ET\Builder\Framework\DependencyManagement\Interfaces\DependencyInterface' );
 	}
 
 	/**

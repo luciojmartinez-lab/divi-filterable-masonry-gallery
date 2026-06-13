@@ -33,7 +33,9 @@ class DFMG_Divi_Module extends ET_Builder_Module {
 	 * @return void
 	 */
 	public function init() {
-		$this->name             = esc_html__( 'Filterable Masonry Gallery', 'divi-filterable-masonry-gallery' );
+		$this->name             = function_exists( 'et_builder_d5_enabled' ) && et_builder_d5_enabled()
+			? esc_html__( 'Filterable Masonry Gallery (Legacy)', 'divi-filterable-masonry-gallery' )
+			: esc_html__( 'Filterable Masonry Gallery', 'divi-filterable-masonry-gallery' );
 		$this->plural           = esc_html__( 'Filterable Masonry Galleries', 'divi-filterable-masonry-gallery' );
 		$this->main_css_element = '%%order_class%%.dfmg-gallery';
 		$this->icon_path        = DFMG_PLUGIN_DIR . 'assets/module-icon.svg';

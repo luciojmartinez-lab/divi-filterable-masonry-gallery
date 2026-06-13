@@ -1,0 +1,538 @@
+{
+  "name": "dfmg/filterable-masonry-gallery",
+  "d4Shortcode": "dfmg_filterable_masonry_gallery",
+  "title": "Filterable Masonry Gallery",
+  "titles": "Filterable Masonry Galleries",
+  "moduleIcon": "",
+  "moduleClassName": "dfmg_divi5_module",
+  "moduleOrderClassName": "dfmg_divi5_module",
+  "category": "module",
+  "attributes": {
+    "module": {
+      "type": "object",
+      "selector": "{{selector}}",
+      "default": {
+        "meta": {
+          "adminLabel": {
+            "desktop": {
+              "value": "Filterable Masonry Gallery"
+            }
+          }
+        }
+      },
+      "settings": {
+        "meta": {
+          "adminLabel": {}
+        },
+        "advanced": {
+          "link": {},
+          "text": {},
+          "htmlAttributes": {}
+        },
+        "decoration": {
+          "background": {},
+          "sizing": {},
+          "spacing": {},
+          "border": {},
+          "boxShadow": {},
+          "filters": {},
+          "transform": {},
+          "animation": {},
+          "overflow": {},
+          "disabledOn": {},
+          "transition": {},
+          "position": {},
+          "zIndex": {},
+          "scroll": {},
+          "sticky": {}
+        }
+      }
+    },
+    "gallery": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": ""
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "contentGallery",
+            "priority": 10,
+            "render": true,
+            "attrName": "gallery.innerContent",
+            "label": "Saved Gallery Slug",
+            "description": "Use a saved Masonry Gallery slug, for example mi-galeria.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "ids": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": ""
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "contentGallery",
+            "priority": 20,
+            "render": true,
+            "attrName": "ids.innerContent",
+            "label": "Image IDs",
+            "description": "Optional comma-separated attachment IDs. This overrides Saved Gallery Slug.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/textarea",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "3"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "layoutGallery",
+            "priority": 10,
+            "render": true,
+            "attrName": "columns.innerContent",
+            "label": "Desktop Columns",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "tabletColumns": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "2"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "layoutGallery",
+            "priority": 20,
+            "render": true,
+            "attrName": "tabletColumns.innerContent",
+            "label": "Tablet Columns",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "mobileColumns": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "1"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "layoutGallery",
+            "priority": 30,
+            "render": true,
+            "attrName": "mobileColumns.innerContent",
+            "label": "Mobile Columns",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "18"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "layoutGallery",
+            "priority": 40,
+            "render": true,
+            "attrName": "gap.innerContent",
+            "label": "Gap",
+            "description": "Pixel gap between images.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "showFilters": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "on"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 10,
+            "render": true,
+            "attrName": "showFilters.innerContent",
+            "label": "Show Filters",
+            "description": "Use on or off.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "filterAllLabel": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "All"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 20,
+            "render": true,
+            "attrName": "filterAllLabel.innerContent",
+            "label": "All Label",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "includeTerms": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": ""
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 30,
+            "render": true,
+            "attrName": "includeTerms.innerContent",
+            "label": "Limit Filters",
+            "description": "Optional comma-separated Gallery Filter slugs.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "imageSize": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "large"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 40,
+            "render": true,
+            "attrName": "imageSize.innerContent",
+            "label": "Image Size",
+            "description": "thumbnail, medium, large, or full.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "showCaptions": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "on"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 50,
+            "render": true,
+            "attrName": "showCaptions.innerContent",
+            "label": "Show Captions",
+            "description": "Use on or off.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "captionSource": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "caption"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 60,
+            "render": true,
+            "attrName": "captionSource.innerContent",
+            "label": "Caption Source",
+            "description": "caption, title, alt, or none.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "linkBehavior": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "lightbox"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 70,
+            "render": true,
+            "attrName": "linkBehavior.innerContent",
+            "label": "Click Action",
+            "description": "lightbox, file, attachment, or none.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    }
+  },
+  "customCssFields": {
+    "gallery": {
+      "subName": "gallery",
+      "selectorSuffix": " .dfmg-gallery"
+    },
+    "item": {
+      "subName": "item",
+      "selectorSuffix": " .dfmg-item"
+    },
+    "caption": {
+      "subName": "caption",
+      "selectorSuffix": " .dfmg-caption"
+    },
+    "filter": {
+      "subName": "filter",
+      "selectorSuffix": " .dfmg-filter"
+    }
+  },
+  "settings": {
+    "content": "auto",
+    "design": "auto",
+    "advanced": "auto",
+    "groups": {
+      "contentGallery": {
+        "panel": "content",
+        "priority": 10,
+        "groupName": "contentGallery",
+        "multiElements": true,
+        "component": {
+          "name": "divi/composite",
+          "props": {
+            "groupLabel": "Gallery"
+          }
+        }
+      },
+      "layoutGallery": {
+        "panel": "content",
+        "priority": 20,
+        "groupName": "layoutGallery",
+        "multiElements": true,
+        "component": {
+          "name": "divi/composite",
+          "props": {
+            "groupLabel": "Layout"
+          }
+        }
+      },
+      "displayGallery": {
+        "panel": "content",
+        "priority": 30,
+        "groupName": "displayGallery",
+        "multiElements": true,
+        "component": {
+          "name": "divi/composite",
+          "props": {
+            "groupLabel": "Display"
+          }
+        }
+      }
+    }
+  }
+}

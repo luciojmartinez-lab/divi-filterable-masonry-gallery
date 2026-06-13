@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,6 +17,7 @@ Divi Filterable Masonry Gallery creates responsive image galleries that can be f
 The plugin includes:
 
 * A Divi builder module when the classic Divi module API is available.
+* A native Divi 5 module registered through module JSON and the Divi 5 module library API.
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
@@ -28,7 +29,7 @@ The plugin includes:
 2. Activate the plugin.
 3. Go to Media Library, edit images, and assign terms under Gallery Filters.
 4. Go to Masonry Galleries > Add New, create a gallery, and choose images.
-5. In Divi, add the "Filterable Masonry Gallery" module when it appears. If your Divi 5 build does not expose the compatibility API, use the shortcode fallback.
+5. In Divi 5, add the native "Filterable Masonry Gallery" module and enter a saved gallery slug or image IDs. The shortcode remains available for Code/Text modules and regular WordPress content.
 
 == Shortcode ==
 
@@ -62,9 +63,12 @@ Options:
 
 == Divi 5 note ==
 
-Divi 5 has evolved its extension APIs. This plugin registers a classic Divi custom module when Divi exposes `ET_Builder_Module`, which Divi 5 compatibility builds can load. The shortcode remains the stable integration path and can be placed in a Divi Code or Text module.
+The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.2.0 =
+Add an experimental native Divi 5 module registration using module JSON, Divi 5 module library JavaScript, and PHP render callback while keeping the legacy module for existing layouts.
 
 = 1.1.1 =
 Switch frontend masonry layout to CSS columns so galleries stay in normal page flow and do not overlap the footer in Divi 5.

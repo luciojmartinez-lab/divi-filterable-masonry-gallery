@@ -1,0 +1,102 @@
+{
+  "module": {
+    "meta": {
+      "adminLabel": {
+        "desktop": {
+          "value": "Filterable Masonry Gallery"
+        }
+      }
+    }
+  },
+  "gallery": {
+    "innerContent": {
+      "desktop": {
+        "value": ""
+      }
+    }
+  },
+  "ids": {
+    "innerContent": {
+      "desktop": {
+        "value": ""
+      }
+    }
+  },
+  "columns": {
+    "innerContent": {
+      "desktop": {
+        "value": "3"
+      }
+    }
+  },
+  "tabletColumns": {
+    "innerContent": {
+      "desktop": {
+        "value": "2"
+      }
+    }
+  },
+  "mobileColumns": {
+    "innerContent": {
+      "desktop": {
+        "value": "1"
+      }
+    }
+  },
+  "gap": {
+    "innerContent": {
+      "desktop": {
+        "value": "18"
+      }
+    }
+  },
+  "showFilters": {
+    "innerContent": {
+      "desktop": {
+        "value": "on"
+      }
+    }
+  },
+  "filterAllLabel": {
+    "innerContent": {
+      "desktop": {
+        "value": "All"
+      }
+    }
+  },
+  "includeTerms": {
+    "innerContent": {
+      "desktop": {
+        "value": ""
+      }
+    }
+  },
+  "imageSize": {
+    "innerContent": {
+      "desktop": {
+        "value": "large"
+      }
+    }
+  },
+  "showCaptions": {
+    "innerContent": {
+      "desktop": {
+        "value": "on"
+      }
+    }
+  },
+  "captionSource": {
+    "innerContent": {
+      "desktop": {
+        "value": "caption"
+      }
+    }
+  },
+  "linkBehavior": {
+    "innerContent": {
+      "desktop": {
+        "value": "lightbox"
+      }
+    }
+  }
+}
