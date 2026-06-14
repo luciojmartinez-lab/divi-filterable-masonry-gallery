@@ -62,6 +62,17 @@ class DFMG_Divi_Module extends ET_Builder_Module {
 				'toggle_slug'     => 'main_content',
 				'description'     => esc_html__( 'Choose the images that will appear in this filterable masonry gallery.', 'divi-filterable-masonry-gallery' ),
 			),
+			'layout_mode'      => array(
+				'label'           => esc_html__( 'Layout', 'divi-filterable-masonry-gallery' ),
+				'type'            => 'select',
+				'option_category' => 'layout',
+				'default'         => 'masonry',
+				'options'         => array(
+					'masonry' => esc_html__( 'Masonry', 'divi-filterable-masonry-gallery' ),
+					'grid'    => esc_html__( 'Uniform Grid', 'divi-filterable-masonry-gallery' ),
+				),
+				'toggle_slug'     => 'main_content',
+			),
 			'show_filters'     => array(
 				'label'           => esc_html__( 'Show Filters', 'divi-filterable-masonry-gallery' ),
 				'type'            => 'yes_no_button',
@@ -214,6 +225,19 @@ class DFMG_Divi_Module extends ET_Builder_Module {
 					'link'   => esc_html__( 'Link', 'divi-filterable-masonry-gallery' ),
 					'eye'    => esc_html__( 'Eye', 'divi-filterable-masonry-gallery' ),
 					'none'   => esc_html__( 'None', 'divi-filterable-masonry-gallery' ),
+				),
+				'toggle_slug'     => 'main_content',
+			),
+			'image_shadow'     => array(
+				'label'           => esc_html__( 'Image Shadow', 'divi-filterable-masonry-gallery' ),
+				'type'            => 'select',
+				'option_category' => 'configuration',
+				'default'         => 'none',
+				'options'         => array(
+					'none'   => esc_html__( 'None', 'divi-filterable-masonry-gallery' ),
+					'soft'   => esc_html__( 'Soft', 'divi-filterable-masonry-gallery' ),
+					'medium' => esc_html__( 'Medium', 'divi-filterable-masonry-gallery' ),
+					'strong' => esc_html__( 'Strong', 'divi-filterable-masonry-gallery' ),
 				),
 				'toggle_slug'     => 'main_content',
 			),

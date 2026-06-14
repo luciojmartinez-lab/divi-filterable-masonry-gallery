@@ -28,17 +28,22 @@ class GalleryModule implements DependencyInterface {
 	 * @return void
 	 */
 	public function load() {
-		$module_json_folder_path = DFMG_DIVI5_JSON_PATH . 'filterable-masonry-gallery/';
+		$module_json_folder_paths = array(
+			DFMG_DIVI5_JSON_PATH . 'filterable-masonry-gallery/',
+			DFMG_DIVI5_JSON_PATH . 'filterable-grid-gallery/',
+		);
 
 		add_action(
 			'init',
-			static function() use ( $module_json_folder_path ) {
-				ModuleRegistration::register_module(
-					$module_json_folder_path,
-					array(
-						'render_callback' => array( GalleryModule::class, 'render_callback' ),
-					)
-				);
+			static function() use ( $module_json_folder_paths ) {
+				foreach ( $module_json_folder_paths as $module_json_folder_path ) {
+					ModuleRegistration::register_module(
+						$module_json_folder_path,
+						array(
+							'render_callback' => array( GalleryModule::class, 'render_callback' ),
+						)
+					);
+				}
 			}
 		);
 	}
@@ -53,9 +58,14 @@ class GalleryModule implements DependencyInterface {
 	 * @return string
 	 */
 	public static function render_callback( $attrs, $content, $block, $elements ) {
+		$is_grid_module = is_object( $block )
+			&& isset( $block->block_type->name )
+			&& 'dfmg/filterable-grid-gallery' === $block->block_type->name;
+
 		$args = array(
 			'gallery'          => self::attr_value( $attrs, 'gallery', '' ),
 			'ids'              => self::attr_value( $attrs, 'ids', '' ),
+			'layout_mode'      => self::attr_value( $attrs, 'layoutMode', $is_grid_module ? 'grid' : 'masonry' ),
 			'columns'          => self::attr_value( $attrs, 'columns', 3 ),
 			'tablet_columns'   => self::attr_value( $attrs, 'tabletColumns', 2 ),
 			'mobile_columns'   => self::attr_value( $attrs, 'mobileColumns', 1 ),
@@ -63,10 +73,11 @@ class GalleryModule implements DependencyInterface {
 			'image_size'       => self::attr_value( $attrs, 'imageSize', 'large' ),
 			'filter_all_label' => self::attr_value( $attrs, 'filterAllLabel', __( 'All', 'divi-filterable-masonry-gallery' ) ),
 			'show_filters'     => self::attr_value( $attrs, 'showFilters', 'on' ),
-			'show_captions'    => self::attr_value( $attrs, 'showCaptions', 'on' ),
+			'show_captions'    => self::attr_value( $attrs, 'showCaptions', $is_grid_module ? 'off' : 'on' ),
 			'caption_source'   => self::attr_value( $attrs, 'captionSource', 'caption' ),
 			'link_behavior'    => self::attr_value( $attrs, 'linkBehavior', 'lightbox' ),
 			'hover_icon'       => self::attr_value( $attrs, 'hoverIcon', 'plus' ),
+			'image_shadow'     => self::attr_value( $attrs, 'imageShadow', $is_grid_module ? 'soft' : 'none' ),
 			'include_terms'    => self::attr_value( $attrs, 'includeTerms', '' ),
 		);
 

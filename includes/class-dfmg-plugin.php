@@ -326,6 +326,7 @@ final class DFMG_Plugin {
 		$aliases = array(
 			'tabletColumns'  => 'tablet_columns',
 			'mobileColumns'  => 'mobile_columns',
+			'layoutMode'     => 'layout_mode',
 			'imageSize'      => 'image_size',
 			'filterAllLabel' => 'filter_all_label',
 			'showFilters'    => 'show_filters',
@@ -333,6 +334,7 @@ final class DFMG_Plugin {
 			'captionSource'  => 'caption_source',
 			'linkBehavior'   => 'link_behavior',
 			'hoverIcon'      => 'hover_icon',
+			'imageShadow'    => 'image_shadow',
 			'includeTerms'   => 'include_terms',
 		);
 
@@ -551,6 +553,7 @@ final class DFMG_Plugin {
 			'gallery'          => '',
 			'ids'              => '',
 			'gallery_ids'      => '',
+			'layout_mode'      => 'masonry',
 			'columns'          => 3,
 			'tablet_columns'   => 2,
 			'mobile_columns'   => 1,
@@ -562,6 +565,7 @@ final class DFMG_Plugin {
 			'caption_source'   => 'caption',
 			'link_behavior'    => 'lightbox',
 			'hover_icon'       => 'plus',
+			'image_shadow'     => 'none',
 			'orderby'          => 'post__in',
 			'order'            => 'ASC',
 			'include_terms'    => '',
@@ -603,7 +607,9 @@ final class DFMG_Plugin {
 		$classes    = array_filter(
 			array(
 				'dfmg-gallery',
+				'dfmg-layout-' . $args['layout_mode'],
 				'dfmg-link-' . $args['link_behavior'],
+				'dfmg-shadow-' . $args['image_shadow'],
 				$args['extra_class'],
 			)
 		);
@@ -696,6 +702,7 @@ final class DFMG_Plugin {
 		$args['mobile_columns'] = self::bounded_int( $args['mobile_columns'], 1, 3, 1 );
 		$args['gap']            = self::bounded_int( $args['gap'], 0, 80, 18 );
 
+		$args['layout_mode']      = self::one_of( sanitize_key( (string) $args['layout_mode'] ), array( 'masonry', 'grid' ), 'masonry' );
 		$args['image_size']       = sanitize_key( (string) $args['image_size'] );
 		$args['gallery']          = sanitize_text_field( (string) $args['gallery'] );
 		$args['filter_all_label'] = sanitize_text_field( (string) $args['filter_all_label'] );
@@ -704,6 +711,7 @@ final class DFMG_Plugin {
 		$args['caption_source']   = self::one_of( sanitize_key( (string) $args['caption_source'] ), array( 'caption', 'title', 'alt', 'none' ), 'caption' );
 		$args['link_behavior']    = self::one_of( sanitize_key( (string) $args['link_behavior'] ), array( 'lightbox', 'file', 'attachment', 'none' ), 'lightbox' );
 		$args['hover_icon']       = self::one_of( sanitize_key( (string) $args['hover_icon'] ), array( 'plus', 'search', 'link', 'eye', 'none' ), 'plus' );
+		$args['image_shadow']     = self::one_of( sanitize_key( (string) $args['image_shadow'] ), array( 'none', 'soft', 'medium', 'strong' ), 'none' );
 		$args['orderby']          = self::one_of( sanitize_key( (string) $args['orderby'] ), array( 'post__in', 'date', 'title', 'menu_order', 'rand' ), 'post__in' );
 		$args['order']            = self::one_of( strtoupper( sanitize_key( (string) $args['order'] ) ), array( 'ASC', 'DESC' ), 'ASC' );
 		$args['include_terms']    = sanitize_text_field( (string) $args['include_terms'] );

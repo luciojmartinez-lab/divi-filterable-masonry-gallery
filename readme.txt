@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,12 +18,14 @@ The plugin includes:
 
 * A Divi builder module when the classic Divi module API is available.
 * A native Divi 5 module registered through module JSON and the Divi 5 module library API.
+* A native Divi 5 uniform grid module for filterable, lightbox-ready image grids.
 * A real Visual Builder preview rendered through the plugin's PHP gallery output.
 * A visual image selector in the Divi 5 module preview with drag-and-drop thumbnail reordering.
 * A shortcode fallback for Divi 5 layouts, Code modules, Text modules, or any WordPress content area.
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
 * Frontend filtering, row-ordered masonry layout, lazy-loaded images, captions, and a small lightbox.
+* Optional uniform grid layout with equal image tiles and optional per-image shadows.
 * Frontend hover overlay with selectable plus, search, link, eye, or no icon.
 
 == Installation ==
@@ -46,12 +48,13 @@ Saved gallery example:
 
 Fuller example:
 
-`[dfmg_gallery gallery="mi-galeria" columns="4" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="on" caption_source="caption" link_behavior="lightbox" hover_icon="plus"]`
+`[dfmg_gallery gallery="mi-galeria" layout_mode="grid" columns="3" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="off" caption_source="caption" link_behavior="lightbox" hover_icon="plus" image_shadow="soft"]`
 
 Options:
 
 * `gallery`: saved Masonry Gallery slug or ID.
 * `ids`: comma-separated attachment IDs.
+* `layout_mode`: `masonry` or `grid`.
 * `columns`: desktop columns from 1 to 6.
 * `tablet_columns`: tablet columns from 1 to 4.
 * `mobile_columns`: mobile columns from 1 to 3.
@@ -64,12 +67,16 @@ Options:
 * `caption_source`: `caption`, `title`, `alt`, or `none`.
 * `link_behavior`: `lightbox`, `file`, `attachment`, or `none`.
 * `hover_icon`: `plus`, `search`, `link`, `eye`, or `none`.
+* `image_shadow`: `none`, `soft`, `medium`, or `strong`.
 
 == Divi 5 note ==
 
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.9 =
+Add an optional uniform grid layout, a native Divi 5 Filterable Grid Gallery module with grid defaults, and configurable per-image shadows.
 
 = 1.3.8 =
 Add a frontend hover overlay with selectable plus, search, link, eye, or no icon, while keeping the effect out of the builder editing preview.

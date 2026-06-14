@@ -3,7 +3,7 @@
  * Plugin Name: Divi Filterable Masonry Gallery by Lucio
  * Plugin URI: https://github.com/luciojmartinez-lab/divi-filterable-masonry-gallery
  * Description: Adds a Divi-compatible filterable masonry image gallery with media-library filters and a shortcode fallback.
- * Version: 1.3.8
+ * Version: 1.3.9
  * Author: Lucio J. Martinez
  * Text Domain: divi-filterable-masonry-gallery
  * Domain Path: /languages
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DFMG_VERSION', '1.3.8' );
+define( 'DFMG_VERSION', '1.3.9' );
 define( 'DFMG_PLUGIN_FILE', __FILE__ );
 define( 'DFMG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DFMG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

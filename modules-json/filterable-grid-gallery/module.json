@@ -1,8 +1,8 @@
 {
-  "name": "dfmg/filterable-masonry-gallery",
-  "d4Shortcode": "dfmg_filterable_masonry_gallery",
-  "title": "Filterable Masonry Gallery",
-  "titles": "Filterable Masonry Galleries",
+  "name": "dfmg/filterable-grid-gallery",
+  "d4Shortcode": "dfmg_filterable_grid_gallery",
+  "title": "Filterable Grid Gallery",
+  "titles": "Filterable Grid Galleries",
   "moduleIcon": "",
   "moduleClassName": "dfmg_divi5_module",
   "moduleOrderClassName": "dfmg_divi5_module",
@@ -15,7 +15,7 @@
         "meta": {
           "adminLabel": {
             "desktop": {
-              "value": "Filterable Masonry Gallery"
+              "value": "Filterable Grid Gallery"
             }
           }
         }
@@ -119,7 +119,7 @@
       "default": {
         "innerContent": {
           "desktop": {
-            "value": "masonry"
+            "value": "grid"
           }
         }
       },
@@ -412,7 +412,7 @@
       "default": {
         "innerContent": {
           "desktop": {
-            "value": "on"
+            "value": "off"
           }
         }
       },
@@ -544,7 +544,7 @@
       "default": {
         "innerContent": {
           "desktop": {
-            "value": "none"
+            "value": "soft"
           }
         }
       },

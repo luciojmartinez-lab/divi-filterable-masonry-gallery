@@ -3,7 +3,7 @@
     "meta": {
       "adminLabel": {
         "desktop": {
-          "value": "Filterable Masonry Gallery"
+          "value": "Filterable Grid Gallery"
         }
       }
     }
@@ -25,7 +25,7 @@
   "layoutMode": {
     "innerContent": {
       "desktop": {
-        "value": "masonry"
+        "value": "grid"
       }
     }
   },
@@ -88,7 +88,7 @@
   "showCaptions": {
     "innerContent": {
       "desktop": {
-        "value": "on"
+        "value": "off"
       }
     }
   },
@@ -116,7 +116,7 @@
   "imageShadow": {
     "innerContent": {
       "desktop": {
-        "value": "none"
+        "value": "soft"
       }
     }
   }

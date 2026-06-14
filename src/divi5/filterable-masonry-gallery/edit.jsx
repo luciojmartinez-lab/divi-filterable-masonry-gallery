@@ -97,6 +97,7 @@ const mediaWindow = () => {
 const previewParams = (attrs, ids, gallery) => ({
 	gallery,
 	ids,
+	layoutMode: attrValue(attrs, 'layoutMode', 'masonry'),
 	columns: attrValue(attrs, 'columns', '3'),
 	tabletColumns: attrValue(attrs, 'tabletColumns', '2'),
 	mobileColumns: attrValue(attrs, 'mobileColumns', '1'),
@@ -108,7 +109,8 @@ const previewParams = (attrs, ids, gallery) => ({
 	showCaptions: attrValue(attrs, 'showCaptions', 'on'),
 	captionSource: attrValue(attrs, 'captionSource', 'caption'),
 	linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox'),
-	hoverIcon: attrValue(attrs, 'hoverIcon', 'plus')
+	hoverIcon: attrValue(attrs, 'hoverIcon', 'plus'),
+	imageShadow: attrValue(attrs, 'imageShadow', 'none')
 });
 
 const previewUrl = (params) => {

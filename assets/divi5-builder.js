@@ -21,6 +21,7 @@
 			module: moduleAttribute(),
 			gallery: fieldAttribute('gallery', 'Slug de galería guardada', '', 'contentGallery', 10, 'divi/text', 'Usa el slug de una galería guardada, por ejemplo mi-galeria.'),
 			ids: fieldAttribute('ids', 'IDs de imagen', '', 'contentGallery', 20, 'divi/textarea', 'IDs de adjuntos separados por comas. Usa el selector visual para elegir y ordenar imágenes.'),
+			layoutMode: fieldAttribute('layoutMode', 'Layout', 'masonry', 'layoutGallery', 5, 'divi/text', 'Elige Masonry o Rejilla uniforme.'),
 			columns: fieldAttribute('columns', 'Columnas escritorio', '3', 'layoutGallery', 10, 'divi/text', ''),
 			tabletColumns: fieldAttribute('tabletColumns', 'Columnas tablet', '2', 'layoutGallery', 20, 'divi/text', ''),
 			mobileColumns: fieldAttribute('mobileColumns', 'Columnas móvil', '1', 'layoutGallery', 30, 'divi/text', ''),
@@ -32,7 +33,8 @@
 			showCaptions: fieldAttribute('showCaptions', 'Mostrar leyendas', 'on', 'displayGallery', 50, 'divi/text', 'Elige Sí o No.'),
 			captionSource: fieldAttribute('captionSource', 'Fuente de leyenda', 'caption', 'displayGallery', 60, 'divi/text', 'Origen del texto mostrado bajo cada imagen.'),
 			linkBehavior: fieldAttribute('linkBehavior', 'Acción al hacer clic', 'lightbox', 'displayGallery', 70, 'divi/text', 'Qué ocurre al hacer clic en una imagen.'),
-			hoverIcon: fieldAttribute('hoverIcon', 'Icono hover', 'plus', 'displayGallery', 80, 'divi/text', 'Icono mostrado al pasar el raton por encima de una imagen.')
+			hoverIcon: fieldAttribute('hoverIcon', 'Icono hover', 'plus', 'displayGallery', 80, 'divi/text', 'Icono mostrado al pasar el raton por encima de una imagen.'),
+			imageShadow: fieldAttribute('imageShadow', 'Sombra de imagen', 'none', 'displayGallery', 90, 'divi/text', 'Sombra aplicada a cada imagen.')
 		},
 		customCssFields: {
 			gallery: {
@@ -76,6 +78,7 @@
 		},
 		gallery: valueAttr(''),
 		ids: valueAttr(''),
+		layoutMode: valueAttr('masonry'),
 		columns: valueAttr('3'),
 		tabletColumns: valueAttr('2'),
 		mobileColumns: valueAttr('1'),
@@ -87,8 +90,12 @@
 		showCaptions: valueAttr('on'),
 		captionSource: valueAttr('caption'),
 		linkBehavior: valueAttr('lightbox'),
-		hoverIcon: valueAttr('plus')
+		hoverIcon: valueAttr('plus'),
+		imageShadow: valueAttr('none')
 	};
+
+	var gridMetadata = createGridMetadata(metadata);
+	var gridDefaultAttrs = createGridDefaultAttrs(defaultAttrs);
 
 	function valueAttr(value) {
 		return {
@@ -98,6 +105,63 @@
 				}
 			}
 		};
+	}
+
+	function cloneObject(source) {
+		return JSON.parse(JSON.stringify(source));
+	}
+
+	function setAttrDefault(target, attrName, value) {
+		if (
+			target
+			&& target[attrName]
+			&& target[attrName].default
+			&& target[attrName].default.innerContent
+			&& target[attrName].default.innerContent.desktop
+		) {
+			target[attrName].default.innerContent.desktop.value = value;
+		}
+	}
+
+	function setRenderAttrDefault(target, attrName, value) {
+		if (
+			target
+			&& target[attrName]
+			&& target[attrName].innerContent
+			&& target[attrName].innerContent.desktop
+		) {
+			target[attrName].innerContent.desktop.value = value;
+		}
+	}
+
+	function createGridMetadata(source) {
+		var copy = cloneObject(source);
+
+		copy.name = 'dfmg/filterable-grid-gallery';
+		copy.d4Shortcode = 'dfmg_filterable_grid_gallery';
+		copy.title = 'Filterable Grid Gallery';
+		copy.titles = 'Filterable Grid Galleries';
+
+		if (copy.attributes && copy.attributes.module && copy.attributes.module.default) {
+			copy.attributes.module.default.meta.adminLabel.desktop.value = 'Filterable Grid Gallery';
+		}
+
+		setAttrDefault(copy.attributes, 'layoutMode', 'grid');
+		setAttrDefault(copy.attributes, 'showCaptions', 'off');
+		setAttrDefault(copy.attributes, 'imageShadow', 'soft');
+
+		return copy;
+	}
+
+	function createGridDefaultAttrs(source) {
+		var copy = cloneObject(source);
+
+		copy.module.meta.adminLabel.desktop.value = 'Filterable Grid Gallery';
+		setRenderAttrDefault(copy, 'layoutMode', 'grid');
+		setRenderAttrDefault(copy, 'showCaptions', 'off');
+		setRenderAttrDefault(copy, 'imageShadow', 'soft');
+
+		return copy;
 	}
 
 	function moduleAttribute() {
@@ -219,6 +283,7 @@
 		return {
 			gallery: gallery,
 			ids: ids,
+			layoutMode: attrValue(attrs, 'layoutMode', 'masonry'),
 			columns: attrValue(attrs, 'columns', '3'),
 			tabletColumns: attrValue(attrs, 'tabletColumns', '2'),
 			mobileColumns: attrValue(attrs, 'mobileColumns', '1'),
@@ -230,7 +295,8 @@
 			showCaptions: attrValue(attrs, 'showCaptions', 'on'),
 			captionSource: attrValue(attrs, 'captionSource', 'caption'),
 			linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox'),
-			hoverIcon: attrValue(attrs, 'hoverIcon', 'plus')
+			hoverIcon: attrValue(attrs, 'hoverIcon', 'plus'),
+			imageShadow: attrValue(attrs, 'imageShadow', 'none')
 		};
 	}
 
@@ -1005,6 +1071,14 @@
 		hooks.addAction('divi.moduleLibrary.registerModuleLibraryStore.after', 'dfmg/filterable-masonry-gallery', function () {
 			moduleLibrary.registerModule(metadata, {
 				defaultAttrs: defaultAttrs,
+				defaultPrintedStyleAttrs: {},
+				renderers: {
+					edit: Edit
+				}
+			});
+
+			moduleLibrary.registerModule(gridMetadata, {
+				defaultAttrs: gridDefaultAttrs,
 				defaultPrintedStyleAttrs: {},
 				renderers: {
 					edit: Edit

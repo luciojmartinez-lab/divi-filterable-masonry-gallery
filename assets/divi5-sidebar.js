@@ -33,6 +33,13 @@
 			]
 		},
 		{
+			labels: ['Layout'],
+			options: [
+				['masonry', 'Masonry'],
+				['grid', 'Rejilla uniforme']
+			]
+		},
+		{
 			labels: ['Gap', 'Separación', 'Espacio'],
 			options: [
 				['0', '0 px'],
@@ -99,6 +106,15 @@
 				['link', 'Enlace'],
 				['eye', 'Ojo'],
 				['none', 'Ninguno']
+			]
+		},
+		{
+			labels: ['Image Shadow', 'Sombra de imagen'],
+			options: [
+				['none', 'Ninguna'],
+				['soft', 'Suave'],
+				['medium', 'Media'],
+				['strong', 'Fuerte']
 			]
 		}
 	];

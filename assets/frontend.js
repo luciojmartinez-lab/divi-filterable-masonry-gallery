@@ -92,6 +92,11 @@
 			return;
 		}
 
+		if (entry.gallery.classList.contains('dfmg-layout-grid')) {
+			resetMasonryStyles(entry);
+			return;
+		}
+
 		applyMasonryLayout(entry);
 	}
 
