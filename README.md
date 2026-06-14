@@ -80,7 +80,7 @@ npm run build
 Package the `divi-filterable-masonry-gallery` folder as a ZIP for installation:
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.10.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.11.zip -Force
 ```
 
 ## License
