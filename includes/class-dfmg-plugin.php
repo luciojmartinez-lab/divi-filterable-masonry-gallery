@@ -335,6 +335,7 @@ final class DFMG_Plugin {
 			'linkBehavior'   => 'link_behavior',
 			'hoverIcon'      => 'hover_icon',
 			'imageShadow'    => 'image_shadow',
+			'galleryShadow'  => 'gallery_shadow',
 			'includeTerms'   => 'include_terms',
 		);
 
@@ -566,6 +567,7 @@ final class DFMG_Plugin {
 			'link_behavior'    => 'lightbox',
 			'hover_icon'       => 'plus',
 			'image_shadow'     => 'none',
+			'gallery_shadow'   => 'none',
 			'orderby'          => 'post__in',
 			'order'            => 'ASC',
 			'include_terms'    => '',
@@ -610,6 +612,7 @@ final class DFMG_Plugin {
 				'dfmg-layout-' . $args['layout_mode'],
 				'dfmg-link-' . $args['link_behavior'],
 				'dfmg-shadow-' . $args['image_shadow'],
+				'dfmg-gallery-shadow-' . $args['gallery_shadow'],
 				$args['extra_class'],
 			)
 		);
@@ -712,6 +715,7 @@ final class DFMG_Plugin {
 		$args['link_behavior']    = self::one_of( sanitize_key( (string) $args['link_behavior'] ), array( 'lightbox', 'file', 'attachment', 'none' ), 'lightbox' );
 		$args['hover_icon']       = self::one_of( sanitize_key( (string) $args['hover_icon'] ), array( 'plus', 'search', 'link', 'eye', 'none' ), 'plus' );
 		$args['image_shadow']     = self::one_of( sanitize_key( (string) $args['image_shadow'] ), array( 'none', 'soft', 'medium', 'strong' ), 'none' );
+		$args['gallery_shadow']   = self::one_of( sanitize_key( (string) $args['gallery_shadow'] ), array( 'none', 'soft', 'medium', 'strong' ), 'none' );
 		$args['orderby']          = self::one_of( sanitize_key( (string) $args['orderby'] ), array( 'post__in', 'date', 'title', 'menu_order', 'rand' ), 'post__in' );
 		$args['order']            = self::one_of( strtoupper( sanitize_key( (string) $args['order'] ) ), array( 'ASC', 'DESC' ), 'ASC' );
 		$args['include_terms']    = sanitize_text_field( (string) $args['include_terms'] );

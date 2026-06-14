@@ -556,8 +556,41 @@
             "priority": 90,
             "render": true,
             "attrName": "imageShadow.innerContent",
-            "label": "Sombra de imagen",
+            "label": "Sombra de cada imagen",
             "description": "Sombra aplicada a cada imagen.",
+            "features": {
+              "sticky": false,
+              "responsive": false,
+              "hover": false,
+              "dynamicContent": false
+            },
+            "component": {
+              "name": "divi/text",
+              "type": "field"
+            }
+          }
+        }
+      }
+    },
+    "galleryShadow": {
+      "type": "object",
+      "default": {
+        "innerContent": {
+          "desktop": {
+            "value": "none"
+          }
+        }
+      },
+      "settings": {
+        "innerContent": {
+          "groupType": "group-item",
+          "item": {
+            "groupSlug": "displayGallery",
+            "priority": 100,
+            "render": true,
+            "attrName": "galleryShadow.innerContent",
+            "label": "Sombra de caja de galería",
+            "description": "Sombra aplicada al contenedor completo de la galería.",
             "features": {
               "sticky": false,
               "responsive": false,

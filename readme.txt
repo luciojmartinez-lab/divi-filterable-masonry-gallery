@@ -4,7 +4,7 @@ Tags: divi, gallery, masonry, filterable gallery, images
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 6.5
-Stable tag: 1.3.9
+Stable tag: 1.3.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,7 @@ The plugin includes:
 * Saved Masonry Galleries with a media picker and reusable gallery slugs.
 * A Gallery Filters taxonomy for images in the Media Library.
 * Frontend filtering, row-ordered masonry layout, lazy-loaded images, captions, and a small lightbox.
-* Optional uniform grid layout with equal image tiles and optional per-image shadows.
+* Optional uniform grid layout with equal image tiles, per-image shadows, and gallery box shadows.
 * Frontend hover overlay with selectable plus, search, link, eye, or no icon.
 
 == Installation ==
@@ -48,7 +48,7 @@ Saved gallery example:
 
 Fuller example:
 
-`[dfmg_gallery gallery="mi-galeria" layout_mode="grid" columns="3" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="off" caption_source="caption" link_behavior="lightbox" hover_icon="plus" image_shadow="soft"]`
+`[dfmg_gallery gallery="mi-galeria" layout_mode="grid" columns="3" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="off" caption_source="caption" link_behavior="lightbox" hover_icon="plus" image_shadow="soft" gallery_shadow="none"]`
 
 Options:
 
@@ -68,12 +68,16 @@ Options:
 * `link_behavior`: `lightbox`, `file`, `attachment`, or `none`.
 * `hover_icon`: `plus`, `search`, `link`, `eye`, or `none`.
 * `image_shadow`: `none`, `soft`, `medium`, or `strong`.
+* `gallery_shadow`: `none`, `soft`, `medium`, or `strong`.
 
 == Divi 5 note ==
 
 The plugin registers a native Divi 5 module through module JSON, Divi 5 module library JavaScript, and a PHP render callback. The older `ET_Builder_Module` implementation remains available only for existing layouts and Divi builds that still need compatibility mode.
 
 == Changelog ==
+
+= 1.3.10 =
+Split shadows into independent controls for each image and the gallery box, and strengthen the per-image shadow rendering.
 
 = 1.3.9 =
 Add an optional uniform grid layout, a native Divi 5 Filterable Grid Gallery module with grid defaults, and configurable per-image shadows.

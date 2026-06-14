@@ -34,7 +34,8 @@
 			captionSource: fieldAttribute('captionSource', 'Fuente de leyenda', 'caption', 'displayGallery', 60, 'divi/text', 'Origen del texto mostrado bajo cada imagen.'),
 			linkBehavior: fieldAttribute('linkBehavior', 'Acción al hacer clic', 'lightbox', 'displayGallery', 70, 'divi/text', 'Qué ocurre al hacer clic en una imagen.'),
 			hoverIcon: fieldAttribute('hoverIcon', 'Icono hover', 'plus', 'displayGallery', 80, 'divi/text', 'Icono mostrado al pasar el raton por encima de una imagen.'),
-			imageShadow: fieldAttribute('imageShadow', 'Sombra de imagen', 'none', 'displayGallery', 90, 'divi/text', 'Sombra aplicada a cada imagen.')
+			imageShadow: fieldAttribute('imageShadow', 'Sombra de cada imagen', 'none', 'displayGallery', 90, 'divi/text', 'Sombra aplicada a cada imagen.'),
+			galleryShadow: fieldAttribute('galleryShadow', 'Sombra de caja de galería', 'none', 'displayGallery', 100, 'divi/text', 'Sombra aplicada al contenedor completo de la galería.')
 		},
 		customCssFields: {
 			gallery: {
@@ -91,7 +92,8 @@
 		captionSource: valueAttr('caption'),
 		linkBehavior: valueAttr('lightbox'),
 		hoverIcon: valueAttr('plus'),
-		imageShadow: valueAttr('none')
+		imageShadow: valueAttr('none'),
+		galleryShadow: valueAttr('none')
 	};
 
 	var gridMetadata = createGridMetadata(metadata);
@@ -149,6 +151,7 @@
 		setAttrDefault(copy.attributes, 'layoutMode', 'grid');
 		setAttrDefault(copy.attributes, 'showCaptions', 'off');
 		setAttrDefault(copy.attributes, 'imageShadow', 'soft');
+		setAttrDefault(copy.attributes, 'galleryShadow', 'none');
 
 		return copy;
 	}
@@ -160,6 +163,7 @@
 		setRenderAttrDefault(copy, 'layoutMode', 'grid');
 		setRenderAttrDefault(copy, 'showCaptions', 'off');
 		setRenderAttrDefault(copy, 'imageShadow', 'soft');
+		setRenderAttrDefault(copy, 'galleryShadow', 'none');
 
 		return copy;
 	}
@@ -296,7 +300,8 @@
 			captionSource: attrValue(attrs, 'captionSource', 'caption'),
 			linkBehavior: attrValue(attrs, 'linkBehavior', 'lightbox'),
 			hoverIcon: attrValue(attrs, 'hoverIcon', 'plus'),
-			imageShadow: attrValue(attrs, 'imageShadow', 'none')
+			imageShadow: attrValue(attrs, 'imageShadow', 'none'),
+			galleryShadow: attrValue(attrs, 'galleryShadow', 'none')
 		};
 	}
 

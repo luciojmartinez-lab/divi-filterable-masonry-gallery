@@ -109,7 +109,16 @@
 			]
 		},
 		{
-			labels: ['Image Shadow', 'Sombra de imagen'],
+			labels: ['Image Shadow', 'Each Image Shadow', 'Sombra de imagen', 'Sombra de cada imagen'],
+			options: [
+				['none', 'Ninguna'],
+				['soft', 'Suave'],
+				['medium', 'Media'],
+				['strong', 'Fuerte']
+			]
+		},
+		{
+			labels: ['Gallery Box Shadow', 'Sombra de caja', 'Sombra de caja de galería'],
 			options: [
 				['none', 'Ninguna'],
 				['soft', 'Suave'],

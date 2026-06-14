@@ -78,6 +78,7 @@ class GalleryModule implements DependencyInterface {
 			'link_behavior'    => self::attr_value( $attrs, 'linkBehavior', 'lightbox' ),
 			'hover_icon'       => self::attr_value( $attrs, 'hoverIcon', 'plus' ),
 			'image_shadow'     => self::attr_value( $attrs, 'imageShadow', $is_grid_module ? 'soft' : 'none' ),
+			'gallery_shadow'   => self::attr_value( $attrs, 'galleryShadow', 'none' ),
 			'include_terms'    => self::attr_value( $attrs, 'includeTerms', '' ),
 		);
 

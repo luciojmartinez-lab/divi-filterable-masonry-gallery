@@ -119,5 +119,12 @@
         "value": "soft"
       }
     }
+  },
+  "galleryShadow": {
+    "innerContent": {
+      "desktop": {
+        "value": "none"
+      }
+    }
   }
 }

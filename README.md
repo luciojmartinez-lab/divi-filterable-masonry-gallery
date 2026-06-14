@@ -16,7 +16,7 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 - Row-ordered masonry layout with Visual Builder reordering controls.
 - Optional uniform grid layout with equal image tiles.
 - Responsive desktop, tablet, and mobile column controls.
-- Optional per-image shadows.
+- Optional per-image shadows and gallery box shadows.
 - Captions from media caption, title, or alt text.
 - Frontend hover overlay with selectable icon styles.
 - Lightweight built-in lightbox.
@@ -41,7 +41,7 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 ```
 
 ```text
-[dfmg_gallery gallery="mi-galeria" layout_mode="grid" columns="3" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="off" caption_source="caption" link_behavior="lightbox" hover_icon="plus" image_shadow="soft"]
+[dfmg_gallery gallery="mi-galeria" layout_mode="grid" columns="3" tablet_columns="2" mobile_columns="1" gap="20" image_size="large" show_filters="on" show_captions="off" caption_source="caption" link_behavior="lightbox" hover_icon="plus" image_shadow="soft" gallery_shadow="none"]
 ```
 
 ### Options
@@ -62,6 +62,7 @@ WordPress plugin for creating responsive filterable image galleries with a mason
 - `link_behavior`: `lightbox`, `file`, `attachment`, or `none`.
 - `hover_icon`: `plus`, `search`, `link`, `eye`, or `none`.
 - `image_shadow`: `none`, `soft`, `medium`, or `strong`.
+- `gallery_shadow`: `none`, `soft`, `medium`, or `strong`.
 
 ## Divi 5
 
@@ -79,7 +80,7 @@ npm run build
 Package the `divi-filterable-masonry-gallery` folder as a ZIP for installation:
 
 ```powershell
-Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.9.zip -Force
+Compress-Archive -Path .\divi-filterable-masonry-gallery -DestinationPath .\divi-filterable-masonry-gallery-1.3.10.zip -Force
 ```
 
 ## License
